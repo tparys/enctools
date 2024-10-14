@@ -13,6 +13,13 @@
 
 int main(int argc, char **argv)
 {
+    // Sanity check
+    if (argc < 2)
+    {
+	fprintf(stderr, "Usage: mbtiles_reader <path/to/file.mbtiles>\n");
+	return 1;
+    }
+
     // Open SQLite DB
     sqlite3 *db = nullptr;
     if (sqlite3_open_v2(argv[1], &db,
