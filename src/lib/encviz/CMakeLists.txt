@@ -1,4 +1,5 @@
 add_library(encviz
+  enc_dataset.cpp
   web_mercator.cpp
   )
 target_link_libraries(encviz
@@ -7,5 +8,3 @@ target_link_libraries(encviz
   ${MICROHTTPD_LIBRARIES}
   ${SQLITE3_LIBRARIES}
   )
-
-

@@ -14,7 +14,7 @@ web_mercator::web_mercator(std::size_t x, std::size_t y, std::size_t z, int tile
     // Nominal planet radius
     double radius = 6378137;
 
-    // Nominal dimentions in meters of Web Mercator map
+    // Nominal dimentions in meters of Web Mercator map at zoom level 0
     double tile_side = 2 * M_PI * radius;
 
     // Meter coordinates from bottom left, not center
@@ -31,6 +31,9 @@ web_mercator::web_mercator(std::size_t x, std::size_t y, std::size_t z, int tile
     bbox_m_.min.y = y * tile_side - offset_m_;
     bbox_m_.max.x = bbox_m_.min.x + tile_side;
     bbox_m_.max.y = bbox_m_.min.y + tile_side;
+
+    // Compute pixels per meter
+    ppm_ = tile_size / tile_side;
 }
 
 /**
@@ -59,6 +62,22 @@ bound_box web_mercator::get_bbox_deg() const
 /**
  * Convert coordinate from meters to degrees
  *
+ * \param[in] in Input coordinate (degrees)
+ * \return Output coordinate (meters)
+ */
+coord web_mercator::deg_to_meters(const coord &in) const
+{
+    coord out = {
+	in.x * offset_m_ / 180.0,
+        log(tan((90 + in.y) * M_PI / 360.0)) / (M_PI / 180.0)
+    };
+    out.y *= offset_m_ / 180.0;
+    return out;
+}
+
+/**
+ * Convert coordinate from meters to degrees
+ *
  * \param[in] in Input coordinate (meters)
  * \return Output coordinate (degrees)
  */
@@ -73,17 +92,33 @@ coord web_mercator::meters_to_deg(const coord &in) const
 }
 
 /**
- * Convert coordinate from meters to degrees
+ * Convert coordinate from meters to pixels
  *
  * \param[in] in Input coordinate (degrees)
  * \return Output coordinate (meters)
  */
-coord web_mercator::deg_to_meters(const coord &in) const
+coord web_mercator::meters_to_pixels(const coord &in) const
 {
+    // Compute meters from top left of tile, scaled by pixels per meter
     coord out = {
-	in.x * offset_m_ / 180.0,
-        log(tan((90 + in.y) * M_PI / 360.0)) / (M_PI / 180.0)
+	(in.x - bbox_m_.min.x) * ppm_,
+	(bbox_m_.max.y - in.y) * ppm_
     };
-    out.y *= offset_m_ / 180.0;
+    return out;
+}
+
+/**
+ * Convert coordinate from pixels to meters
+ *
+ * \param[in] in Input coordinate (meters)
+ * \return Output coordinate (degrees)
+ */
+coord web_mercator::pixels_to_meters(const coord &in) const
+{
+    // Compute meters from top left of tile, scaled by pixels per meter
+    coord out = {
+	bbox_m_.min.x + (in.x / ppm_),
+	bbox_m_.max.y - (in.y / ppm_)
+    };
     return out;
 }

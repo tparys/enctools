@@ -18,3 +18,7 @@ target_link_libraries(mbtiles_serve encviz)
 # Cairo 2D graphics
 add_executable(cairo_stroke cairo_stroke.cpp)
 target_link_libraries(cairo_stroke encviz)
+
+# ENC index test
+add_executable(enc_index enc_index.cpp)
+target_link_libraries(enc_index encviz)

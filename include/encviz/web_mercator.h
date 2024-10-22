@@ -32,23 +32,42 @@ public:
     /**
      * Convert coordinate from meters to degrees
      *
+     * \param[in] in Input coordinate (degrees)
+     * \return Output coordinate (meters)
+     */
+    coord deg_to_meters(const coord &in) const;
+
+    /**
+     * Convert coordinate from meters to degrees
+     *
      * \param[in] in Input coordinate (meters)
      * \return Output coordinate (degrees)
      */
     coord meters_to_deg(const coord &in) const;
 
     /**
-     * Convert coordinate from meters to degrees
+     * Convert coordinate from meters to pixels
      *
      * \param[in] in Input coordinate (degrees)
      * \return Output coordinate (meters)
      */
-    coord deg_to_meters(const coord &in) const;
+    coord meters_to_pixels(const coord &in) const;
+
+    /**
+     * Convert coordinate from pixels to meters
+     *
+     * \param[in] in Input coordinate (meters)
+     * \return Output coordinate (degrees)
+     */
+    coord pixels_to_meters(const coord &in) const;
 
 private:
 
-    /// Map offset
+    /// Map offset from bottom left (meters)
     double offset_m_;
+
+    /// Pixels per meter
+    double ppm_;
 
     /// Computed bounding box (meters)
     bound_box bbox_m_;
