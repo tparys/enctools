@@ -1,6 +1,9 @@
 #include <cmath>
 #include <encviz/web_mercator.h>
 
+namespace encviz
+{
+
 /**
  * Constructor
  *
@@ -27,10 +30,10 @@ web_mercator::web_mercator(std::size_t x, std::size_t y, std::size_t z, int tile
     tile_side /= ntiles;
 
     // Compute bounding box (meters)
-    bbox_m_.min.x = x * tile_side - offset_m_;
-    bbox_m_.min.y = y * tile_side - offset_m_;
-    bbox_m_.max.x = bbox_m_.min.x + tile_side;
-    bbox_m_.max.y = bbox_m_.min.y + tile_side;
+    bbox_m_.MinX = x * tile_side - offset_m_;
+    bbox_m_.MinY = y * tile_side - offset_m_;
+    bbox_m_.MaxX = bbox_m_.MinX + tile_side;
+    bbox_m_.MaxY = bbox_m_.MinY + tile_side;
 
     // Compute pixels per meter
     ppm_ = tile_size / tile_side;
@@ -41,7 +44,7 @@ web_mercator::web_mercator(std::size_t x, std::size_t y, std::size_t z, int tile
  *
  * \return Computed coordinates
  */
-bound_box web_mercator::get_bbox_meters() const
+OGREnvelope web_mercator::get_bbox_meters() const
 {
     return bbox_m_;
 }
@@ -51,11 +54,22 @@ bound_box web_mercator::get_bbox_meters() const
  *
  * \return Computed coordinates
  */
-bound_box web_mercator::get_bbox_deg() const
+OGREnvelope web_mercator::get_bbox_deg() const
 {
-    bound_box bbox_deg;
-    bbox_deg.min = meters_to_deg(bbox_m_.min);
-    bbox_deg.max = meters_to_deg(bbox_m_.max);
+    // Min/max coordinates
+    coord cmin = { bbox_m_.MinX, bbox_m_.MinY };
+    coord cmax = { bbox_m_.MaxX, bbox_m_.MaxY };
+
+    // Convert coords to degrees
+    cmin = meters_to_deg(cmin);
+    cmax = meters_to_deg(cmax);
+
+    // Return as envelope
+    OGREnvelope bbox_deg;
+    bbox_deg.MinX = cmin.x;
+    bbox_deg.MaxX = cmax.x;
+    bbox_deg.MinY = cmin.y;
+    bbox_deg.MaxY = cmax.y;
     return bbox_deg;
 }
 
@@ -68,7 +82,7 @@ bound_box web_mercator::get_bbox_deg() const
 coord web_mercator::deg_to_meters(const coord &in) const
 {
     coord out = {
-	in.x * offset_m_ / 180.0,
+        in.x * offset_m_ / 180.0,
         log(tan((90 + in.y) * M_PI / 360.0)) / (M_PI / 180.0)
     };
     out.y *= offset_m_ / 180.0;
@@ -84,8 +98,8 @@ coord web_mercator::deg_to_meters(const coord &in) const
 coord web_mercator::meters_to_deg(const coord &in) const
 {
     coord out = {
-	(in.x / offset_m_) * 180,
-	(in.y / offset_m_) * 180
+        (in.x / offset_m_) * 180,
+        (in.y / offset_m_) * 180
     };
     out.y = 180 / M_PI * (2 * atan(exp(out.y * M_PI / 180)) - M_PI / 2);
     return out;
@@ -101,8 +115,8 @@ coord web_mercator::meters_to_pixels(const coord &in) const
 {
     // Compute meters from top left of tile, scaled by pixels per meter
     coord out = {
-	(in.x - bbox_m_.min.x) * ppm_,
-	(bbox_m_.max.y - in.y) * ppm_
+        (in.x - bbox_m_.MinX) * ppm_,
+        (bbox_m_.MaxY - in.y) * ppm_
     };
     return out;
 }
@@ -117,8 +131,10 @@ coord web_mercator::pixels_to_meters(const coord &in) const
 {
     // Compute meters from top left of tile, scaled by pixels per meter
     coord out = {
-	bbox_m_.min.x + (in.x / ppm_),
-	bbox_m_.max.y - (in.y / ppm_)
+        bbox_m_.MinX + (in.x / ppm_),
+        bbox_m_.MaxY - (in.y / ppm_)
     };
     return out;
 }
+
+}; // ~namespace encviz

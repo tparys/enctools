@@ -1,65 +1,55 @@
 #include <filesystem>
 #include <encviz/enc_dataset.h>
 
-/**
- * Constructor
- *
- * \param[in] enc_root ENC_ROOT base directory
- */
-enc_dataset::enc_dataset(const char *enc_root)
+namespace encviz
 {
-    std::string as_string(enc_root);
-    index_charts(enc_root);
-}
 
 /**
  * Constructor
  *
  * \param[in] enc_root ENC_ROOT base directory
  */
-enc_dataset::enc_dataset(const std::filesystem::path &enc_root)
+enc_dataset::enc_dataset(const std::string &enc_root)
 {
-    index_charts(enc_root);
+    std::vector<std::string> enc_roots = {enc_root};
+    index_charts(enc_roots);
+}
+
+/**
+ * Constructor
+ *
+ * \param[in] enc_roots ENC_ROOT base directories
+ */
+enc_dataset::enc_dataset(const std::vector<std::string> &enc_roots)
+{
+    index_charts(enc_roots);
 }
 
 /**
  * Index ENC Charts
  *
- * \param[in] enc_root ENC_ROOT base directory
+ * \param[in] enc_roots ENC_ROOT base directories
  */
-void enc_dataset::index_charts(const std::filesystem::path &enc_root)
+void enc_dataset::index_charts(const std::vector<std::string> &enc_roots)
 {
-    namespace fs = std::filesystem;
-
     // In case this gets called more than once
     charts_.clear();
 
-    // Quickly scan for any .000 files in our directory root
-    for (const fs::directory_entry &entry : fs::recursive_directory_iterator(enc_root))
+    // Scan for any .000 files in each passed root
+    for (const std::string &enc_root : enc_roots)
     {
-	if (entry.path().extension() != ".000")
-	    continue;
-	charts_.push_back(load_metadata(entry));
+        auto rdi = std::filesystem::recursive_directory_iterator(enc_root);
+        for (const std::filesystem::directory_entry &entry : rdi)
+        {
+            if (entry.path().extension() == ".000")
+            {
+                charts_.push_back(enc_metadata(entry.path()));
+            }
+        }
     }
+
+    // Debug
     printf("Loaded %lu charts ...\n", charts_.size());
 }
 
-/**
- * Load ENC Metadata
- *
- * \param[in] enc_path Path to ENC chart
- * \return Loaded metadata
- */
-enc_metadata enc_dataset::load_metadata(const std::filesystem::path &enc_path)
-{
-    // FIXME
-    enc_metadata next =
-    {
-	.base_name = enc_path.stem(),
-	.full_path = enc_path.string(),
-	.scale = 0,
-	.bbox_deg_ = {}
-    };
-    return next;
-}
-       
+}; // ~namespace encviz

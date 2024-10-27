@@ -1,5 +1,8 @@
 #pragma once
 
+namespace encviz
+{
+
 /// Generalized 2D coordinate
 struct coord
 {
@@ -10,12 +13,4 @@ struct coord
     double y;
 };
 
-/// Simple bounding box
-struct bound_box
-{
-    /// Min coordinates
-    coord min;
-
-    /// Max coordinates
-    coord max;
-};
+}; // ~namespace encviz

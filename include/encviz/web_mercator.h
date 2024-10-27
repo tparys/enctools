@@ -1,6 +1,10 @@
 #pragma once
 #include <cstddef>
+#include <ogr_core.h>
 #include <encviz/common.h>
+
+namespace encviz
+{
 
 class web_mercator
 {
@@ -20,14 +24,14 @@ public:
      *
      * \return Computed coordinates
      */
-    bound_box get_bbox_meters() const;
+    OGREnvelope get_bbox_meters() const;
 
     /**
      * Get bounding box in degrees (EPSG:4326)
      *
      * \return Computed coordinates
      */
-    bound_box get_bbox_deg() const;
+    OGREnvelope get_bbox_deg() const;
 
     /**
      * Convert coordinate from meters to degrees
@@ -70,5 +74,7 @@ private:
     double ppm_;
 
     /// Computed bounding box (meters)
-    bound_box bbox_m_;
+    OGREnvelope bbox_m_;
 };
+
+}; // ~namespace encviz

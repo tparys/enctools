@@ -1,18 +1,32 @@
 #pragma once
 #include <string>
+#include <filesystem>
+#include <ogr_core.h>
 #include <encviz/common.h>
 
-struct enc_metadata
+namespace encviz
 {
-    /// Short name for chart (basename)
-    std::string base_name;
 
-    /// Full path to chart
-    std::string full_path;
+class enc_metadata
+{
 
-    /// Compilation of scale
-    double scale;
+public:
+
+    /**
+     * Constructor
+     *
+     * param[in] path Path to ENC chart data
+     */
+    enc_metadata(const std::filesystem::path &path);
+
+    /// Path to data file
+    std::filesystem::path path_;
+
+    /// Compilation of scale (DSPM CSCL)
+    int scale_;
 
     /// Bounding box (deg)
-    bound_box bbox_deg_;
+    OGREnvelope bbox_;
 };
+
+}; // ~namespace encviz

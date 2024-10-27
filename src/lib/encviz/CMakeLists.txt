@@ -1,5 +1,6 @@
 add_library(encviz
   enc_dataset.cpp
+  enc_metadata.cpp
   web_mercator.cpp
   )
 target_link_libraries(encviz
