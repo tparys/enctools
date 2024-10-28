@@ -1,5 +1,6 @@
 #include <gdal.h>
 #include <encviz/enc_dataset.h>
+#include <encviz/web_mercator.h>
 
 int main(int argc, char **argv)
 {
@@ -14,12 +15,19 @@ int main(int argc, char **argv)
     GDALAllRegister();
 
     // Load up
+    encviz::enc_dataset eds;
     std::vector<std::string> enc_roots;
     for (int i = 1; i < argc; i++)
     {
-        enc_roots.push_back(argv[i]);
+        eds.load_charts(argv[i]);
     }
-    encviz::enc_dataset blarg(enc_roots);
+
+    // Web Mercator testing
+    std::vector<std::string> layers = { "LNDARE" };
+    encviz::web_mercator wm(8, 18, 5);
+    OGREnvelope bbox = wm.get_bbox_deg();
+    int scale_min = (int)round(2e7 / pow(2, 8));
+    eds.export_data(nullptr, layers, bbox, scale_min);
 
     // Global GDAL Shutdown
     GDALDestroy();
