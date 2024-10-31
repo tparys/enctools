@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <gdal_priv.h>
 #include <ogrsf_frmts.h>
 
 namespace encviz
@@ -98,11 +99,53 @@ private:
      */
     int get_feat_field_int(OGRFeature *feat, const char *name);
 
+    /**
+     * Create Temporary Dataset
+     *
+     * \return Created dataset
+     */
+    std::unique_ptr<GDALDataset> create_temp_dataset();
+
+    /**
+     * Create Layer
+     *
+     * \param[out] ds Dataset for layer
+     * \param[in] name Name of layer
+     * \return Created dataset
+     */
+    OGRLayer *create_layer(GDALDataset *ds, const char *name);
+
+    /**
+     * Copy ENC Chart Coverage
+     *
+     * \param[out] layer Output layer
+     * \param[in] ds Input dataset
+     */
+    void copy_chart_coverage(OGRLayer *layer, GDALDataset *ds);
+
+    /**
+     * Clear Layer Features
+     *
+     * \param[out] layer OGR layer
+     */
+    void clear_layer(OGRLayer *layer);
+
+    /**
+     * Bounding Box to Layer Feature
+     *
+     * \param[out] layer GDAL output layer
+     * \param[in] bbox OGR Envelope
+     */
+    void create_bbox_feature(OGRLayer *layer, const OGREnvelope &bbox);
+
     /// Loaded chart metadata by chart name (stem)
     std::map<std::string, metadata> charts_;
 
     /// Chart data cache location
     std::filesystem::path cache_;
+
+    /// GDAL memory driver handle
+    GDALDriver *mem_drv_;
 };
 
 }; // ~namespace encviz

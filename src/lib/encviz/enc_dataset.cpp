@@ -2,6 +2,7 @@
 #include <fstream>
 #include <algorithm>
 #include <filesystem>
+#include <memory>
 #include <encviz/enc_dataset.h>
 
 // Helper macro for data presence
@@ -23,6 +24,10 @@ enc_dataset::enc_dataset()
         cache_ += "/.encviz";
     }
     printf("Cache location is %s\n", cache_.c_str());
+
+    // Get GDAL driver
+    mem_drv_ = GetGDALDriverManager()->GetDriverByName("Memory");
+    CHECKNULL(mem_drv_, "Cannot load OGR memory driver");
 }
 
 /**
@@ -100,6 +105,75 @@ void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
     {
         printf(" - (%d) %s\n", chart->scale, chart->path.c_str());
     }
+
+    // FIXME - DEBUG only
+    {
+        OGRLayer *covr = create_layer(ods, "Tile_Coverage");
+        create_bbox_feature(covr, bbox);
+    }
+
+    // Create a new temp dataset for working
+    auto temp_ds = create_temp_dataset();
+
+    // Going to need 3 working layers
+    OGRLayer *clip_layer = create_layer(temp_ds.get(), "");
+    OGRLayer *coverage_layer = create_layer(temp_ds.get(), "");
+    OGRLayer *result_layer = create_layer(temp_ds.get(), "");
+
+    // Not all OGR output drivers support  interleaving, so we'll have to do
+    // each output layer in one shot, and as a performance issue, open all input
+    // charts once per layer
+    for (const std::string &layer_name : layers)
+    {
+        OGRLayer *olayer = create_layer(ods, layer_name.c_str());
+
+        // Reset working layers, w/ clip layer maintaining missing coverage
+        clear_layer(clip_layer);
+        create_bbox_feature(clip_layer, bbox);
+
+        // Start copying data out
+        printf("Copy data for layer: %s\n", layer_name.c_str());
+        for (const auto &chart : selected)
+        {
+            // Open input data set
+            printf(" - Process: %s\n", chart->path.stem().string().c_str());
+            GDALDataset *ids = GDALDataset::Open(chart->path.string().c_str(),
+                                                 GDAL_OF_VECTOR | GDAL_OF_READONLY,
+                                                 nullptr, nullptr, nullptr);
+            CHECKNULL(ids, "Cannot open input data set");
+
+            // Open input layer
+            OGRLayer *ilayer = ids->GetLayerByName(layer_name.c_str());
+            if (ilayer != nullptr)
+            {
+                // Copy over features
+                if (ilayer->Clip(clip_layer, olayer) != OGRERR_NONE)
+                {
+                    throw std::runtime_error("Cannot perform layer clip operation");
+                }
+
+                // Remove any coverage from the clipping layer
+                copy_chart_coverage(coverage_layer, ids);
+                if (clip_layer->Erase(coverage_layer, result_layer) != OGRERR_NONE)
+                {
+                    throw std::runtime_error("Cannot perform layer erase operation");
+                }
+                std::swap(clip_layer, result_layer);
+                clear_layer(coverage_layer);
+                clear_layer(result_layer);
+            }
+
+            // Close input dataset
+            delete ids;
+
+            // We can stop if all coverage is accounted for
+            if (clip_layer->GetFeatureCount() == 0)
+            {
+                printf(" - Coverage done (stopping)\n");
+                break;
+            }
+        }
+    }
 }
 
 /**
@@ -122,12 +196,9 @@ bool enc_dataset::save_chart_cache(const metadata &meta)
     std::ofstream handle(cached_path.string().c_str());
     if (handle.good())
     {
-        handle << meta.path << "\n"
-               << meta.scale << "\n"
-               << meta.bbox.MinX << "\n"
-               << meta.bbox.MaxX << "\n"
-               << meta.bbox.MinY << "\n"
-               << meta.bbox.MaxY << "\n";
+        handle << meta.path << "\n" << meta.scale << "\n"
+               << meta.bbox.MinX << "\n" << meta.bbox.MaxX << "\n"
+               << meta.bbox.MinY << "\n" << meta.bbox.MaxY << "\n";
     }
 
     return handle.good();
@@ -150,12 +221,9 @@ bool enc_dataset::load_chart_cache(const std::filesystem::path &path)
         if (handle.good())
         {
             metadata next;
-            handle >> next.path
-                   >> next.scale
-                   >> next.bbox.MinX
-                   >> next.bbox.MaxX
-                   >> next.bbox.MinY
-                   >> next.bbox.MaxY;
+            handle >> next.path >> next.scale
+                   >> next.bbox.MinX >> next.bbox.MaxX
+                   >> next.bbox.MinY >> next.bbox.MaxY;
 
             // Ensure no EOF, and path matches before saving metadata
             if (handle.good() && (path == next.path))
@@ -270,6 +338,108 @@ int enc_dataset::get_feat_field_int(OGRFeature *feat, const char *name)
 
     // Safe to call now
     return feat->GetFieldAsInteger(idx);
+}
+
+/**
+ * Create Temporary Dataset
+ *
+ * \return Created dataset
+ */
+std::unique_ptr<GDALDataset> enc_dataset::create_temp_dataset()
+{
+    GDALDataset *ptr = mem_drv_->Create("", 0, 0, 0, GDT_Unknown, nullptr);
+    CHECKNULL(ptr, "Cannot create temporary dataset");
+    return std::unique_ptr<GDALDataset>(ptr);
+}
+
+/**
+ * Create Temporary Layer
+ *
+ * \param[out] ds Dataset for layer
+ * \param[in] name Name of layer
+ * \return Created dataset
+ */
+OGRLayer *enc_dataset::create_layer(GDALDataset *ds, const char *name)
+{
+    OGRLayer *ptr = ds->CreateLayer(name);
+    CHECKNULL(ptr, "Cannot create dataset layer");
+    return ptr;
+}
+
+/**
+ * Copy ENC Chart Coverage
+ *
+ * \param[out] layer Output layer
+ * \param[in] ds Input dataset
+ */
+void enc_dataset::copy_chart_coverage(OGRLayer *layer, GDALDataset *ds)
+{
+    // Get "Coverage" (M_COVR) data
+    OGRLayer *ilayer = ds->GetLayerByName("M_COVR");
+    CHECKNULL(ilayer, "Cannot open M_COVR layer");
+
+    // Copy any defined coverage features
+    for (auto &feat : ilayer)
+    {
+        // "Category of Coverage" (CATCOV) may be:
+        //  - "coverage available" (1)
+        //  - "no coverage available" (2)
+        if (get_feat_field_int(feat.get(), "CATCOV") != 1)
+            continue;
+
+        // Create output feature
+        if (layer->CreateFeature(feat.get()) != OGRERR_NONE)
+        {
+            throw std::runtime_error("Cannot create coverage feature");
+        }
+    }
+}
+
+/**
+ * Clear Layer Features
+ *
+ * \param[out] layer OGR layer
+ */
+void enc_dataset::clear_layer(OGRLayer *layer)
+{
+    for (auto &feat : layer)
+    {
+        if (layer->DeleteFeature(feat->GetFID()) != OGRERR_NONE)
+        {
+            throw std::runtime_error("Cannot delete layer feature");
+        }
+    }
+}
+
+/**
+ * Bounding Box to Layer Feature
+ *
+ * \param[out] layer GDAL output layer
+ * \param[in] bbox OGR Envelope
+ */
+void enc_dataset::create_bbox_feature(OGRLayer *layer, const OGREnvelope &bbox)
+{
+    // Define polygon boundary first
+    OGRLinearRing geo_ring;
+    geo_ring.addPoint(bbox.MinX, bbox.MinY);
+    geo_ring.addPoint(bbox.MaxX, bbox.MinY);
+    geo_ring.addPoint(bbox.MaxX, bbox.MaxY);
+    geo_ring.addPoint(bbox.MinX, bbox.MaxY);
+    geo_ring.addPoint(bbox.MinX, bbox.MinY);
+
+    // Define the polygon
+    OGRPolygon geo_poly;
+    geo_poly.addRing(&geo_ring);
+
+    // Create a feature based on the output layer
+    OGRFeature feat(layer->GetLayerDefn());
+    feat.SetGeometry(&geo_poly);
+
+    // Add to layer
+    if (layer->CreateFeature(&feat) != OGRERR_NONE)
+    {
+        throw std::runtime_error("Cannot create layer feature");
+    }
 }
 
 }; // ~namespace encviz
