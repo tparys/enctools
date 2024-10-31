@@ -7,24 +7,30 @@ int main(int argc, char **argv)
     // Check args
     if (argc < 2)
     {
-        printf("Usage: enc_index path/to/ENC_ROOT [path/to/ENC_ROOT] ...\n");
+        printf("Usage: enc_index path/to/ENC_ROOT [x y z]\n");
         return 1;
     }
 
     // Global GDAL Initialization
     GDALAllRegister();
 
-    // Load up
+    // Load up ENC set
     encviz::enc_dataset eds;
     std::vector<std::string> enc_roots;
-    for (int i = 1; i < argc; i++)
+    eds.load_charts(argv[1]);
+
+    // Pick tile to load
+    int x = 8, y = 18, z = 5;
+    if (argc >=  5)
     {
-        eds.load_charts(argv[i]);
+        x = std::atoi(argv[2]);
+        y = std::atoi(argv[3]);
+        z = std::atoi(argv[4]);
     }
 
     // Web Mercator testing
     std::vector<std::string> layers = { "LNDARE" };
-    encviz::web_mercator wm(8, 18, 5);
+    encviz::web_mercator wm(x, y, z);
     OGREnvelope bbox = wm.get_bbox_deg();
     int scale_min = (int)round(2e7 / pow(2, 8));
     eds.export_data(nullptr, layers, bbox, scale_min);

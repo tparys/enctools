@@ -1,3 +1,6 @@
+#include <iostream>
+#include <fstream>
+#include <algorithm>
 #include <filesystem>
 #include <encviz/enc_dataset.h>
 
@@ -12,6 +15,14 @@ namespace encviz
  */
 enc_dataset::enc_dataset()
 {
+    // Cache location
+    char *phome = getenv("HOME");
+    if (phome != nullptr)
+    {
+        cache_ = phome;
+        cache_ += "/.encviz";
+    }
+    printf("Cache location is %s\n", cache_.c_str());
 }
 
 /**
@@ -37,19 +48,139 @@ void enc_dataset::load_charts(const std::string &enc_root)
            load_chart(entry.path());
         }
     }
+
+    printf("%lu charts loaded\n", charts_.size());
 }
 
 /**
  * Load Single ENC Chart
  *
- * \param[in] enc_roots ENC_ROOT base directories
+ * \param[in] path Path to ENC chart
  */
-void enc_dataset::load_chart(const std::filesystem::path &path)
+bool enc_dataset::load_chart(const std::filesystem::path &path)
+{
+    return load_chart_cache(path) || load_chart_disk(path);
+}
+
+/**
+ * Export ENC Data to Empty Dataset
+ *
+ * Creates specified layers in output dataset, populating with best data
+ * available for given bounding box and minimum presentation scale.
+ *
+ * \param[out] ds Output dataset
+ * \param[in] layers Specified ENC layers (S57)
+ * \param[in] bbox Data bounding box (deg)
+ * \param[in] scale_min Minimum data compilation scale
+ */
+void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
+                              OGREnvelope bbox, int scale_min)
+{
+    printf("Filter: Scale=%d, BBOX=(%g to %g),(%g to %g)\n",
+           scale_min, bbox.MinX, bbox.MaxX, bbox.MinY, bbox.MaxY);
+
+    // Build list of suitable charts
+    std::vector<const metadata*> selected;
+    for (const auto &[name, chart] : charts_)
+    {
+        if ((scale_min <= chart.scale) && bbox.Intersects(chart.bbox))
+        {
+            selected.push_back(&chart);
+        }
+    }
+
+    // Sort in ascending scale order (most detailed first)
+    std::sort(selected.begin(), selected.end(),
+              [](const metadata* a, const metadata* b) {
+                  return a->scale < b->scale;});
+
+    // Dump what we have to screen
+    printf("Selected %lu/%lu charts:\n", selected.size(), charts_.size());
+    for (const auto &chart : selected)
+    {
+        printf(" - (%d) %s\n", chart->scale, chart->path.c_str());
+    }
+}
+
+/**
+ * Save Single ENC Chart To Cache
+ *
+ * \param[in] path Path to ENC chart
+ * \return False on failure
+ */
+bool enc_dataset::save_chart_cache(const metadata &meta)
+{
+    // Ensure cache directory exists
+    if (!std::filesystem::exists(cache_) &&
+        !std::filesystem::create_directories(cache_))
+    {
+        return false;
+    }
+
+    // Save to /path/to/cache/NAME ...
+    std::filesystem::path cached_path = cache_ / meta.path.stem();
+    std::ofstream handle(cached_path.string().c_str());
+    if (handle.good())
+    {
+        handle << meta.path << "\n"
+               << meta.scale << "\n"
+               << meta.bbox.MinX << "\n"
+               << meta.bbox.MaxX << "\n"
+               << meta.bbox.MinY << "\n"
+               << meta.bbox.MaxY << "\n";
+    }
+
+    return handle.good();
+}
+
+/**
+ * Load Single ENC Chart from Cache
+ *
+ * \param[in] path Path to ENC chart
+ * \return False on failure
+ */
+bool enc_dataset::load_chart_cache(const std::filesystem::path &path)
+{
+    // Look for /path/to/cache/NAME ...
+    std::filesystem::path cached_path = cache_ / path.stem();
+    if (std::filesystem::exists(cached_path))
+    {
+        // Try and read it
+        std::ifstream handle(cached_path.string().c_str());
+        if (handle.good())
+        {
+            metadata next;
+            handle >> next.path
+                   >> next.scale
+                   >> next.bbox.MinX
+                   >> next.bbox.MaxX
+                   >> next.bbox.MinY
+                   >> next.bbox.MaxY;
+
+            // Ensure no EOF, and path matches before saving metadata
+            if (handle.good() && (path == next.path))
+            {
+                charts_[path.stem().string()] = next;
+                return true;
+            }
+        }
+    }
+
+    // Failed to load
+    return false;
+}
+
+/**
+ * Load Single ENC Chart from Disk
+ *
+ * \param[in] path Path to ENC chart
+ * \return False on failure
+ */
+bool enc_dataset::load_chart_disk(const std::filesystem::path &path)
 {
     metadata next = {path};
 
     // Open dataset
-    printf("Index: %s\n", path.string().c_str());
     const char *const drivers[] = { "S57", nullptr };
     GDALDataset *ds = GDALDataset::Open(path.string().c_str(),
                                         GDAL_OF_VECTOR | GDAL_OF_READONLY,
@@ -69,7 +200,6 @@ void enc_dataset::load_chart(const std::filesystem::path &path)
 
         // .. that has "Dataset Parameter" (DSPM) "Compilation of Scale" (CSCL)
         next.scale = get_feat_field_int(feat.get(), "DSPM_CSCL");
-        printf(" - Scale: 1:%d\n", next.scale);
     }
 
     // Get Chart Coverage Bounds
@@ -98,49 +228,16 @@ void enc_dataset::load_chart(const std::filesystem::path &path)
             geo->getEnvelope(&covr);
             next.bbox.Merge(covr);
         }
-
-        printf(" - BBox: (%g to %g), (%g to %g)\n",
-               next.bbox.MinX, next.bbox.MaxX,
-               next.bbox.MinY, next.bbox.MaxY);
     }
 
-    // Cleanup and save
+    // Cleanup
     delete ds;
-    charts_.push_back(next);
-}
 
-/**
- * Export ENC Data to Empty Dataset
- *
- * Creates specified layers in output dataset, populating with best data
- * available for given bounding box and minimum presentation scale.
- *
- * \param[out] ds Output dataset
- * \param[in] layers Specified ENC layers (S57)
- * \param[in] bbox Data bounding box (deg)
- * \param[in] scale_min Minimum data compilation scale
- */
-void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
-                              OGREnvelope bbox, int scale_min)
-{
-    printf("Filter: Scale=%d, BBOX=(%g to %g),(%g to %g)\n",
-           scale_min, bbox.MinX, bbox.MaxX, bbox.MinY, bbox.MaxY);
+    // Save
+    charts_[path.stem().string()] = next;
+    save_chart_cache(next);
 
-    // Build list of suitable charts
-    std::vector<std::string> selected;
-    for (const auto &chart : charts_)
-    {
-        if ((scale_min <= chart.scale) && bbox.Intersects(chart.bbox))
-        {
-            selected.push_back(chart.path.string());
-        }
-    }
-
-    printf("Selected %lu/%lu charts:\n", selected.size(), charts_.size());
-    for (const auto &path : selected)
-    {
-        printf(" - %s\n", path.c_str());
-    }
+    return true;
 }
 
 /**
@@ -174,6 +271,5 @@ int enc_dataset::get_feat_field_int(OGRFeature *feat, const char *name)
     // Safe to call now
     return feat->GetFieldAsInteger(idx);
 }
-
 
 }; // ~namespace encviz

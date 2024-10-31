@@ -31,6 +31,8 @@ include_directories(
 set(LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin")
 
+set(CMAKE_CXX_FLAGS "-O2 -Wall")
+
 # Build source code
 add_subdirectory(src)
 

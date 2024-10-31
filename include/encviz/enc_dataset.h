@@ -44,9 +44,10 @@ public:
     /**
      * Load Single ENC Chart
      *
-     * \param[in] enc_roots ENC_ROOT base directories
+     * \param[in] path Path to ENC chart
+     * \return False on failure
      */
-    void load_chart(const std::filesystem::path &path);
+    bool load_chart(const std::filesystem::path &path);
 
     /**
      * Export ENC Data to Empty Dataset
@@ -65,6 +66,30 @@ public:
 private:
 
     /**
+     * Save Single ENC Chart To Cache
+     *
+     * \param[in] path Path to ENC chart
+     * \return False on failure
+     */
+    bool save_chart_cache(const metadata &meta);
+
+    /**
+     * Load Single ENC Chart From Cache
+     *
+     * \param[in] path Path to ENC chart
+     * \return False on failure
+     */
+    bool load_chart_cache(const std::filesystem::path &path);
+
+    /**
+     * Load Single ENC Chart From Disk
+     *
+     * \param[in] path Path to ENC chart
+     * \return False on failure
+     */
+    bool load_chart_disk(const std::filesystem::path &path);
+
+    /**
      * Get OGR Integer Field
      *
      * \param[in] feat OGR feature
@@ -73,8 +98,11 @@ private:
      */
     int get_feat_field_int(OGRFeature *feat, const char *name);
 
-    /// Loaded chart metadata
-    std::vector<metadata> charts_;
+    /// Loaded chart metadata by chart name (stem)
+    std::map<std::string, metadata> charts_;
+
+    /// Chart data cache location
+    std::filesystem::path cache_;
 };
 
 }; // ~namespace encviz
