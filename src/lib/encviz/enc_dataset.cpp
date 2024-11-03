@@ -106,12 +106,6 @@ void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
         printf(" - (%d) %s\n", chart->scale, chart->path.c_str());
     }
 
-    // FIXME - DEBUG only
-    {
-        OGRLayer *covr = create_layer(ods, "Tile_Coverage");
-        create_bbox_feature(covr, bbox);
-    }
-
     // Create a new temp dataset for working
     auto temp_ds = create_temp_dataset();
 
@@ -120,7 +114,7 @@ void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
     OGRLayer *coverage_layer = create_layer(temp_ds.get(), "");
     OGRLayer *result_layer = create_layer(temp_ds.get(), "");
 
-    // Not all OGR output drivers support  interleaving, so we'll have to do
+    // Not all OGR output drivers support interleaving, so we'll have to do
     // each output layer in one shot, and as a performance issue, open all input
     // charts once per layer
     for (const std::string &layer_name : layers)

@@ -1,0 +1,247 @@
+#include <encviz/enc_renderer.h>
+
+namespace encviz
+{
+
+/**
+ * Constructor
+ *
+ * \param[in] tile_size Dimension of output image
+ * \param[in] min_scale0 Min display scale at zoom=0
+ */
+enc_renderer::enc_renderer(int tile_size, double min_scale0)
+    : tile_size_(tile_size)
+    , min_scale0_(min_scale0)
+{
+}
+
+/**
+ * Recursively Load ENC Charts
+ *
+ * \param[in] enc_root ENC_ROOT base directory
+ */
+void enc_renderer::load_charts(const std::string &enc_root)
+{
+    enc_.load_charts(enc_root);
+}
+
+/**
+ * Render Chart Data
+ *
+ * \param[in] x Tile X coordinate (from left)
+ * \param[in] y Tile Y coordinate (from bottom)
+ * \param[in] z Tile zoom (power of 2)
+ * \return False if no data to render
+ */
+bool enc_renderer::render(int x, int y, int z, const render_style &style)
+{
+    // Collect the layers we need
+    std::vector<std::string> layers;
+    for (const layer_style &lstyle : style.layers)
+    {
+        layers.push_back(lstyle.layer_name);
+    }
+
+    // Export all data in this tile
+    GDALDataset *tile_data = GetGDALDriverManager()->GetDriverByName("Memory")->
+        Create("", 0, 0, 0, GDT_Unknown, nullptr);
+    encviz::web_mercator wm(x, y, z, tile_size_);
+    OGREnvelope bbox = wm.get_bbox_deg();
+    int scale_min = (int)round(min_scale0_ / pow(2, z));
+    enc_.export_data(tile_data, layers, bbox, scale_min);
+
+    // Create a cairo surface
+    cairo_surface_t *surface =
+        cairo_image_surface_create(CAIRO_FORMAT_ARGB32, tile_size_, tile_size_);
+    cairo_t *cr = cairo_create(surface);
+                                                          
+    // Flood background w/ white 0xffffff
+    if (style.background.has_value())
+    {
+        set_color(cr, style.background.value());
+        cairo_paint(cr);
+    }
+
+    // Render style layers
+    for (const auto &lstyle : style.layers)
+    {
+        // Render feature geometry in this layer
+        OGRLayer *tile_layer = tile_data->GetLayerByName(lstyle.layer_name.c_str());
+        for (const auto &feat : tile_layer)
+        {
+            OGRGeometry *geo = feat->GetGeometryRef();
+            render_geo(cr, geo, wm, lstyle);
+        }
+    }
+
+    // Write out image
+    auto rc = cairo_surface_write_to_png(surface, "out.png");
+    if (rc)
+    {
+        printf("Cairo write error %d : %s\n", rc,
+               cairo_status_to_string(rc));
+        printf("Tile size was %d\n", tile_size_);
+    }
+
+    // Cleanup
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+    GDALClose(tile_data);
+
+    return true;
+}
+
+/**
+ * Render Feature Geometry
+ *
+ * \param[out] cr Image context
+ * \param[in] geo Feature geometry
+ * \param[in] wm Web Mercator point mapper
+ * \param[in] style Feature style
+ */
+void enc_renderer::render_geo(cairo_t *cr, const OGRGeometry *geo,
+                              const web_mercator &wm, const layer_style &style)
+{
+    // What sort of geometry were we passed?
+    OGRwkbGeometryType gtype = geo->getGeometryType();
+    switch (gtype)
+    {
+        // Ignoring some geometries for now
+        case wkbPoint: // 1
+        case wkbMultiPoint: // 4
+            break;
+
+        case wkbLineString: // 2
+            render_line(cr, geo->toLineString(), wm, style);
+            break;
+
+        case wkbMultiLineString: // 5
+            for (const OGRGeometry *child : geo->toMultiLineString())
+            {
+                render_geo(cr, child, wm, style);
+            }
+            break;
+
+        case wkbPolygon: // 6
+            render_poly(cr, geo->toPolygon(), wm, style);
+            break;
+
+        case wkbGeometryCollection: // 7
+            for (const OGRGeometry *child : geo->toGeometryCollection())
+            {
+                render_geo(cr, child, wm, style);
+            }
+            break;
+
+        case wkbMultiPolygon: // 10
+            for (const OGRPolygon *child : geo->toMultiPolygon())
+            {
+                render_poly(cr, child, wm, style);
+            }
+            break;
+
+        default:
+            throw std::runtime_error("Unhandled geometry of type " +
+                                     std::to_string(gtype));
+    }
+}
+
+/**
+ * Render LineString Geometry
+ *
+ * \param[out] cr Image context
+ * \param[in] geo Feature geometry
+ * \param[in] wm Web Mercator point mapper
+ * \param[in] style Feature style
+ */
+void enc_renderer::render_line(cairo_t *cr, const OGRLineString *geo,
+                               const web_mercator &wm, const layer_style &style)
+{
+    // Pass OGR points to cairo
+    bool first = true;
+    for (auto &point : geo)
+    {
+        // Convert lat/lon to pixel coordinates
+        coord c = { point.getX(), point.getY() };
+        c = wm.deg_to_meters(c);
+        c = wm.meters_to_pixels(c);
+
+        // Mark first point as pen-down
+        if (first)
+        {
+            cairo_move_to(cr, c.x, c.y);
+            first = false;
+        }
+        else
+        {
+            cairo_line_to(cr, c.x, c.y);
+        }
+    }
+
+    // Draw line
+    set_color(cr, style.line_color);
+    cairo_set_line_width(cr, style.line_width);
+    cairo_stroke(cr);
+}
+
+/**
+ * Render Polygon Geometry
+ *
+ * \param[out] cr Image context
+ * \param[in] geo Feature geometry
+ * \param[in] wm Web Mercator point mapper
+ * \param[in] style Feature style
+ */
+void enc_renderer::render_poly(cairo_t *cr, const OGRPolygon *geo,
+                               const web_mercator &wm, const layer_style &style)
+{
+    // FIXME - Throw a fit if we see interior rings (not handled)
+    if (geo->getNumInteriorRings() != 0)
+    {
+        //throw std::runtime_error("Unhandled polygon with interior rings");
+    }
+
+    // Pass OGR points to cairo
+    bool first = true;
+    for (auto &point : geo->getExteriorRing())
+    {
+        // Convert lat/lon to pixel coordinates
+        coord c = { point.getX(), point.getY() };
+        c = wm.deg_to_meters(c);
+        c = wm.meters_to_pixels(c);
+
+        // Mark first point as pen-down
+        if (first)
+        {
+            cairo_move_to(cr, c.x, c.y);
+            first = false;
+        }
+        else
+        {
+            cairo_line_to(cr, c.x, c.y);
+        }
+    }
+
+    // Draw line and fill
+    set_color(cr, style.fill_color);
+    cairo_fill_preserve(cr);
+    set_color(cr, style.line_color);
+    cairo_set_line_width(cr, style.line_width);
+    cairo_stroke(cr);
+}
+
+/**
+ * Set Render Color
+ *
+ * \param[out] cr Image context
+ * \param[in] c RGB color
+ */
+void enc_renderer::set_color(cairo_t *cr, const color &c)
+{
+    cairo_set_source_rgb(cr,
+                         float(c.red) / 0xff,
+                         float(c.blue) / 0xff,
+                         float(c.green) / 0xff);
+}
+
+}; // ~namespace encviz
