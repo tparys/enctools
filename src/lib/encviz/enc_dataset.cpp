@@ -109,63 +109,75 @@ void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
     // Create a new temp dataset for working
     auto temp_ds = create_temp_dataset();
 
+    // Create layers in output dataset
+    for (const std::string &layer_name : layers)
+    {
+        create_layer(ods, layer_name.c_str());
+    };
+
     // Going to need 3 working layers
     OGRLayer *clip_layer = create_layer(temp_ds.get(), "");
     OGRLayer *coverage_layer = create_layer(temp_ds.get(), "");
     OGRLayer *result_layer = create_layer(temp_ds.get(), "");
 
-    // Not all OGR output drivers support interleaving, so we'll have to do
-    // each output layer in one shot, and as a performance issue, open all input
-    // charts once per layer
-    for (const std::string &layer_name : layers)
+    // Clip layer will track missing coverage
+    create_bbox_feature(clip_layer, bbox);
+
+    // Process charts one at a time to reduce repeated S57 parses
+    for (const auto &chart : selected)
     {
-        OGRLayer *olayer = create_layer(ods, layer_name.c_str());
+        // Open input data set
+        printf(" - Process: %s\n", chart->path.stem().string().c_str());
+        GDALDataset *ids = GDALDataset::Open(chart->path.string().c_str(),
+                                             GDAL_OF_VECTOR | GDAL_OF_READONLY,
+                                             nullptr, nullptr, nullptr);
+        CHECKNULL(ids, "Cannot open input data set");
 
-        // Reset working layers, w/ clip layer maintaining missing coverage
-        clear_layer(clip_layer);
-        create_bbox_feature(clip_layer, bbox);
-
-        // Start copying data out
-        printf("Copy data for layer: %s\n", layer_name.c_str());
-        for (const auto &chart : selected)
+        // Process chart's layers
+        for (const std::string &layer_name : layers)
         {
-            // Open input data set
-            printf(" - Process: %s\n", chart->path.stem().string().c_str());
-            GDALDataset *ids = GDALDataset::Open(chart->path.string().c_str(),
-                                                 GDAL_OF_VECTOR | GDAL_OF_READONLY,
-                                                 nullptr, nullptr, nullptr);
-            CHECKNULL(ids, "Cannot open input data set");
+            // NOTE: Some OGR drivers need to be done in sequence, and don't
+            // like us jumping around betwen layers, like KML ...
+            OGRLayer *olayer = ods->GetLayerByName(layer_name.c_str());
+            if (olayer == nullptr)
+            {
+                throw std::runtime_error("Cannot open output layer (OGR interleaving issue?)");
+            }
 
-            // Open input layer
+            // Get input layer
             OGRLayer *ilayer = ids->GetLayerByName(layer_name.c_str());
-            if (ilayer != nullptr)
+            if (ilayer == nullptr)
             {
-                // Copy over features
-                if (ilayer->Clip(clip_layer, olayer) != OGRERR_NONE)
-                {
-                    throw std::runtime_error("Cannot perform layer clip operation");
-                }
-
-                // Remove any coverage from the clipping layer
-                copy_chart_coverage(coverage_layer, ids);
-                if (clip_layer->Erase(coverage_layer, result_layer) != OGRERR_NONE)
-                {
-                    throw std::runtime_error("Cannot perform layer erase operation");
-                }
-                std::swap(clip_layer, result_layer);
-                clear_layer(coverage_layer);
-                clear_layer(result_layer);
+                // Inland charts may not have certain features like depth
+                // contours. If not present, just skip and move on
+                continue;
             }
-
-            // Close input dataset
-            delete ids;
-
-            // We can stop if all coverage is accounted for
-            if (clip_layer->GetFeatureCount() == 0)
+            
+            // Copy over features
+            if (ilayer->Clip(clip_layer, olayer) != OGRERR_NONE)
             {
-                printf(" - Coverage done (stopping)\n");
-                break;
+                throw std::runtime_error("Cannot perform layer clip operation");
             }
+        }
+
+        // Remove any coverage from the clipping layer
+        copy_chart_coverage(coverage_layer, ids);
+        if (clip_layer->Erase(coverage_layer, result_layer) != OGRERR_NONE)
+        {
+            throw std::runtime_error("Cannot perform layer erase operation");
+        }
+        std::swap(clip_layer, result_layer);
+        clear_layer(coverage_layer);
+        clear_layer(result_layer);
+
+        // Close input dataset
+        delete ids;
+
+        // Stop if all coverage is accounted for ...
+        if (clip_layer->GetFeatureCount() == 0)
+        {
+            printf(" - Complete coverage (STOP)\n");
+            break;
         }
     }
 }

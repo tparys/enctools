@@ -22,3 +22,7 @@ target_link_libraries(cairo_stroke encviz)
 # ENC index test
 add_executable(enc_index enc_index.cpp)
 target_link_libraries(enc_index encviz)
+
+# ENC index test
+add_executable(enc_serve enc_serve.cpp)
+target_link_libraries(enc_serve encviz)

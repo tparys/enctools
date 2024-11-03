@@ -30,13 +30,15 @@ public:
     /**
      * Render Chart Data
      *
+     * \param[out] data PNG bytestream
      * \param[in] x Tile X coordinate (from left)
      * \param[in] y Tile Y coordinate (from bottom)
      * \param[in] z Tile zoom (power of 2)
      * \param[in] style Tile styling data
      * \return False if no data to render
      */
-    bool render(int x, int y, int z, const render_style &style);
+    bool render(std::vector<uint8_t> &data, int x, int y, int z,
+                const render_style &style);
 
 private:
 

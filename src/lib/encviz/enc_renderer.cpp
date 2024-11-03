@@ -4,6 +4,27 @@ namespace encviz
 {
 
 /**
+ * Cairo Stream Callback
+ *
+ * \param[out] closure Pointer to std::vector<uint8_t> output stream
+ * \param[in] data Data buffer
+ * \param[in] length Length of data buffer
+ */
+static cairo_status_t cairo_write_to_vector(void *closure,
+                                            const unsigned char *data,
+                                            unsigned int length)
+{
+    // TODO - Can probably make this better
+    std::vector<uint8_t> *output = (std::vector<uint8_t>*)closure;
+    output->reserve(output->size() + length);
+    for (unsigned int i = 0; i < length; i++)
+    {
+        output->push_back(data[i]);
+    }
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
  * Constructor
  *
  * \param[in] tile_size Dimension of output image
@@ -28,12 +49,14 @@ void enc_renderer::load_charts(const std::string &enc_root)
 /**
  * Render Chart Data
  *
+ * \param[out] data PNG bytestream
  * \param[in] x Tile X coordinate (from left)
  * \param[in] y Tile Y coordinate (from bottom)
  * \param[in] z Tile zoom (power of 2)
  * \return False if no data to render
  */
-bool enc_renderer::render(int x, int y, int z, const render_style &style)
+bool enc_renderer::render(std::vector<uint8_t> &data, int x, int y, int z,
+                          const render_style &style)
 {
     // Collect the layers we need
     std::vector<std::string> layers;
@@ -75,12 +98,15 @@ bool enc_renderer::render(int x, int y, int z, const render_style &style)
     }
 
     // Write out image
-    auto rc = cairo_surface_write_to_png(surface, "out.png");
+    data.clear();
+    cairo_status_t rc =
+        cairo_surface_write_to_png_stream(surface,
+                                          cairo_write_to_vector,
+                                          &data);
     if (rc)
     {
         printf("Cairo write error %d : %s\n", rc,
                cairo_status_to_string(rc));
-        printf("Tile size was %d\n", tile_size_);
     }
 
     // Cleanup
