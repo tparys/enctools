@@ -65,11 +65,24 @@ bool enc_renderer::render(std::vector<uint8_t> &data, int x, int y, int z,
         layers.push_back(lstyle.layer_name);
     }
 
+    // Get base tile boundaries
+    encviz::web_mercator wm(x, y, z, tile_size_);
+    OGREnvelope bbox = wm.get_bbox_deg();
+
+    // Oversample a bit so not clip text between tiles
+    {
+        double oversample = 0.1;
+        double width = bbox.MaxX - bbox.MinX;
+        double height = bbox.MaxY - bbox.MinY;
+        bbox.MinX -= oversample * (width/2);
+        bbox.MaxX += oversample * (width/2);
+        bbox.MinY -= oversample * (height/2);
+        bbox.MaxY += oversample * (height/2);
+    }
+
     // Export all data in this tile
     GDALDataset *tile_data = GetGDALDriverManager()->GetDriverByName("Memory")->
         Create("", 0, 0, 0, GDT_Unknown, nullptr);
-    encviz::web_mercator wm(x, y, z, tile_size_);
-    OGREnvelope bbox = wm.get_bbox_deg();
     int scale_min = (int)round(min_scale0_ / pow(2, z));
     enc_.export_data(tile_data, layers, bbox, scale_min);
 
@@ -132,9 +145,28 @@ void enc_renderer::render_geo(cairo_t *cr, const OGRGeometry *geo,
     OGRwkbGeometryType gtype = geo->getGeometryType();
     switch (gtype)
     {
-        // Ignoring some geometries for now
         case wkbPoint: // 1
+            render_point(cr, geo->toPoint(), wm, style);
+            break;
+
         case wkbMultiPoint: // 4
+            for (const OGRPoint *child : geo->toMultiPoint())
+            {
+                render_point(cr, child, wm, style);
+            }
+            break;
+
+        case wkbPoint25D: // 0x80000001
+            // TODO - SOUNDG only?
+            render_depth(cr, geo->toPoint(), wm, style);
+            break;
+
+        case wkbMultiPoint25D: // 0x80000004
+            // TODO - SOUNDG only?
+            for (const OGRPoint *child : geo->toMultiPoint())
+            {
+                render_depth(cr, child, wm, style);
+            }
             break;
 
         case wkbLineString: // 2
@@ -152,13 +184,6 @@ void enc_renderer::render_geo(cairo_t *cr, const OGRGeometry *geo,
             render_poly(cr, geo->toPolygon(), wm, style);
             break;
 
-        case wkbGeometryCollection: // 7
-            for (const OGRGeometry *child : geo->toGeometryCollection())
-            {
-                render_geo(cr, child, wm, style);
-            }
-            break;
-
         case wkbMultiPolygon: // 10
             for (const OGRPolygon *child : geo->toMultiPolygon())
             {
@@ -166,10 +191,80 @@ void enc_renderer::render_geo(cairo_t *cr, const OGRGeometry *geo,
             }
             break;
 
+        case wkbGeometryCollection: // 7
+            for (const OGRGeometry *child : geo->toGeometryCollection())
+            {
+                render_geo(cr, child, wm, style);
+            }
+            break;
+
         default:
             throw std::runtime_error("Unhandled geometry of type " +
                                      std::to_string(gtype));
     }
+}
+
+/**
+ * Render Depth Value
+ *
+ * \param[out] cr Image context
+ * \param[in] geo Feature geometry
+ * \param[in] wm Web Mercator point mapper
+ * \param[in] style Feature style
+ */
+void enc_renderer::render_depth(cairo_t *cr, const OGRPoint *geo,
+                                const web_mercator &wm, const layer_style &style)
+{
+    // Convert lat/lon to pixel coordinates
+    coord c = wm.point_to_pixels(*geo);
+
+    // TODO - Could do this better?
+    char text[64] = {};
+    snprintf(text, sizeof(text)-1, "%.1f", geo->getZ());
+
+    // Determine text render size
+    cairo_text_extents_t extents = {};
+    cairo_text_extents(cr, text, &extents);
+
+    // Draw text
+    set_color(cr, style.line_color);
+    cairo_select_font_face(cr, "monospace",
+                           CAIRO_FONT_SLANT_NORMAL,
+                           CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(cr, 15);
+    cairo_move_to(cr, c.x - extents.width/2, c.y - extents.height/2);
+    cairo_show_text(cr, text);
+}
+
+/**
+ * Render Point Geometry
+ *
+ * \param[out] cr Image context
+ * \param[in] geo Feature geometry
+ * \param[in] wm Web Mercator point mapper
+ * \param[in] style Feature style
+ */
+void enc_renderer::render_point(cairo_t *cr, const OGRPoint *geo,
+                                const web_mercator &wm, const layer_style &style)
+{
+    // Skip render if not appropriate
+    if (style.marker_size == 0)
+    {
+        return;
+    }
+
+    // Convert lat/lon to pixel coordinates
+    coord c = wm.point_to_pixels(*geo);
+
+    // Draw circle
+    cairo_arc(cr, c.x, c.y, style.marker_size, 0, 2 * M_PI);
+
+    // Draw line and fill
+    set_color(cr, style.fill_color);
+    cairo_fill_preserve(cr);
+    set_color(cr, style.line_color);
+    cairo_set_line_width(cr, style.line_width);
+    cairo_stroke(cr);
 }
 
 /**
@@ -188,9 +283,7 @@ void enc_renderer::render_line(cairo_t *cr, const OGRLineString *geo,
     for (auto &point : geo)
     {
         // Convert lat/lon to pixel coordinates
-        coord c = { point.getX(), point.getY() };
-        c = wm.deg_to_meters(c);
-        c = wm.meters_to_pixels(c);
+        coord c = wm.point_to_pixels(point);
 
         // Mark first point as pen-down
         if (first)
@@ -232,9 +325,7 @@ void enc_renderer::render_poly(cairo_t *cr, const OGRPolygon *geo,
     for (auto &point : geo->getExteriorRing())
     {
         // Convert lat/lon to pixel coordinates
-        coord c = { point.getX(), point.getY() };
-        c = wm.deg_to_meters(c);
-        c = wm.meters_to_pixels(c);
+        coord c = wm.point_to_pixels(point);
 
         // Mark first point as pen-down
         if (first)

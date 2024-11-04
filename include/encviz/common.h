@@ -45,6 +45,12 @@ struct layer_style
 
     /// Line color
     int line_width{1};
+
+    /// Circular marker radius
+    int marker_size;
+
+    /// Text render attribute
+    std::string attr_name;
 };
 
 /// Full rendering style

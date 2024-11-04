@@ -108,8 +108,8 @@ coord web_mercator::meters_to_deg(const coord &in) const
 /**
  * Convert coordinate from meters to pixels
  *
- * \param[in] in Input coordinate (degrees)
- * \return Output coordinate (meters)
+ * \param[in] in Input coordinate (meters)
+ * \return Output coordinate (pixels)
  */
 coord web_mercator::meters_to_pixels(const coord &in) const
 {
@@ -124,8 +124,8 @@ coord web_mercator::meters_to_pixels(const coord &in) const
 /**
  * Convert coordinate from pixels to meters
  *
- * \param[in] in Input coordinate (meters)
- * \return Output coordinate (degrees)
+ * \param[in] in Input coordinate (pixels)
+ * \return Output coordinate (meters)
  */
 coord web_mercator::pixels_to_meters(const coord &in) const
 {
@@ -135,6 +135,20 @@ coord web_mercator::pixels_to_meters(const coord &in) const
         bbox_m_.MaxY - (in.y / ppm_)
     };
     return out;
+}
+
+/**
+ * Convert OGR Point to pixels
+ *
+ * \param[in] point OGR point (deg)
+ * \return Output coordinate (meters)
+ */
+coord web_mercator::point_to_pixels(const OGRPoint &point) const
+{
+    // Convert lat/lon to pixel coordinates
+    coord c = { point.getX(), point.getY() };
+    c = deg_to_meters(c);
+    return meters_to_pixels(c);
 }
 
 }; // ~namespace encviz

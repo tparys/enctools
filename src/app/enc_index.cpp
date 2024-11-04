@@ -56,23 +56,32 @@ int main(int argc, char **argv)
                 { "LNDARE",
                   { 0, 192, 0 },
                   { 0, 255, 0 },
-                  1
+                  1,
+                  5
                 },
                 { "SLCONS",
                   { 0, 0, 0 },
                   { 0, 0, 0 },
-                  1
+                  1,
+                  5
                 },
                 { "DEPCNT",
                   {},
                   { 128, 128, 128 },
-                  1
+                  1,
+                  0
+                },
+                { "SOUNDG",
+                  {},
+                  {},
+                  0,
+                  0
                 }
             }
         };
 
         std::vector<uint8_t> png_bytes;
-        encviz::enc_renderer enc_rend(256, 1e8);
+        encviz::enc_renderer enc_rend(256, 1e9);
         enc_rend.load_charts(argv[1]);
         enc_rend.render(png_bytes, x, y, z, style);
 

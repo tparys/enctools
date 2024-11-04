@@ -54,6 +54,28 @@ private:
                     const web_mercator &wm, const layer_style &style);
 
     /**
+     * Render Depth Value
+     *
+     * \param[out] cr Image context
+     * \param[in] geo Feature geometry
+     * \param[in] wm Web Mercator point mapper
+     * \param[in] style Feature style
+     */
+    void render_depth(cairo_t *cr, const OGRPoint *geo,
+                      const web_mercator &wm, const layer_style &style);
+
+    /**
+     * Render Point Geometry
+     *
+     * \param[out] cr Image context
+     * \param[in] geo Feature geometry
+     * \param[in] wm Web Mercator point mapper
+     * \param[in] style Feature style
+     */
+    void render_point(cairo_t *cr, const OGRPoint *geo,
+                      const web_mercator &wm, const layer_style &style);
+
+    /**
      * Render LineString Geometry
      *
      * \param[out] cr Image context

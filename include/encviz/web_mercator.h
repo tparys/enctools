@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <ogr_core.h>
+#include <ogr_geometry.h>
 #include <encviz/common.h>
 
 namespace encviz
@@ -52,18 +53,26 @@ public:
     /**
      * Convert coordinate from meters to pixels
      *
-     * \param[in] in Input coordinate (degrees)
-     * \return Output coordinate (meters)
+     * \param[in] in Input coordinate (meters)
+     * \return Output coordinate (pixels)
      */
     coord meters_to_pixels(const coord &in) const;
 
     /**
      * Convert coordinate from pixels to meters
      *
-     * \param[in] in Input coordinate (meters)
-     * \return Output coordinate (degrees)
+     * \param[in] in Input coordinate (pixels)
+     * \return Output coordinate (meters)
      */
     coord pixels_to_meters(const coord &in) const;
+
+    /**
+     * Convert OGR Point to pixels
+     *
+     * \param[in] point OGR point (deg)
+     * \return Output coordinate (meters)
+     */
+    coord point_to_pixels(const OGRPoint &point) const;
 
 private:
 

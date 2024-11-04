@@ -20,20 +20,31 @@ encviz::render_style style = {
 
     // Layer styles
     {
-        { "LNDARE",
-          { 0, 192, 0 },
-          { 0, 255, 0 },
-          1
-        },
-        { "SLCONS",
-          { 0, 0, 0 },
-          { 0, 0, 0 },
-          1
-        },
-        { "DEPCNT",
-          {},
-          { 128, 128, 128 },
-          1
+        {
+            { "LNDARE",
+              { 0, 192, 0 },
+              { 0, 255, 0 },
+              1,
+              5
+            },
+            { "SLCONS",
+              { 0, 0, 0 },
+              { 0, 0, 0 },
+              1,
+              5
+            },
+            { "DEPCNT",
+              {},
+              { 128, 128, 128 },
+              1,
+              0
+            },
+            { "SOUNDG",
+              {},
+              {},
+              0,
+              0
+            }
         }
     }
 };
@@ -96,7 +107,7 @@ int main(int argc, char **argv)
     enc_rend.load_charts(argv[1]);
 
     // Start MHD
-    MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | MHD_USE_INTERNAL_POLLING_THREAD,
+    MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | MHD_USE_THREAD_PER_CONNECTION,
 					  PORT, NULL, NULL,
 					  &request_handler, &enc_rend, MHD_OPTION_END);
     if (daemon == nullptr)
