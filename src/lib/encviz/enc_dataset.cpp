@@ -77,8 +77,9 @@ bool enc_dataset::load_chart(const std::filesystem::path &path)
  * \param[in] layers Specified ENC layers (S57)
  * \param[in] bbox Data bounding box (deg)
  * \param[in] scale_min Minimum data compilation scale
+ * \return False if no data available
  */
-void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
+bool enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
                               OGREnvelope bbox, int scale_min)
 {
     printf("Filter: Scale=%d, BBOX=(%g to %g),(%g to %g)\n",
@@ -92,6 +93,10 @@ void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
         {
             selected.push_back(&chart);
         }
+    }
+    if (selected.empty())
+    {
+        return false;
     }
 
     // Sort in ascending scale order (most detailed first)
@@ -180,6 +185,8 @@ void enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
             break;
         }
     }
+
+    return true;
 }
 
 /**

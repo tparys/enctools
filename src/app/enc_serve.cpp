@@ -83,11 +83,18 @@ MHD_Result request_handler(void *cls, struct MHD_Connection *connection,
     // Render requested tile
     std::vector<uint8_t> out_bytes;
     printf("Tile X=%d, Y=%d, Z=%d\n", x, y, z);
-    enc_rend->render(out_bytes, x, y, z, style);
-
-    // Respond
-    return request_reply(connection, MHD_HTTP_OK,
-                         out_bytes.data(), out_bytes.size());
+    if (enc_rend->render(out_bytes, x, y, z, style))
+    {
+        // Respond with rendered data
+        return request_reply(connection, MHD_HTTP_OK,
+                             out_bytes.data(), out_bytes.size());
+    }
+    else
+    {
+        // Nothing available, so 404 ...
+        return request_reply(connection, MHD_HTTP_NOT_FOUND,
+                             nullptr, 0);
+    }
 }
 
 int main(int argc, char **argv)

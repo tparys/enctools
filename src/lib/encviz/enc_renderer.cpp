@@ -84,7 +84,10 @@ bool enc_renderer::render(std::vector<uint8_t> &data, int x, int y, int z,
     GDALDataset *tile_data = GetGDALDriverManager()->GetDriverByName("Memory")->
         Create("", 0, 0, 0, GDT_Unknown, nullptr);
     int scale_min = (int)round(min_scale0_ / pow(2, z));
-    enc_.export_data(tile_data, layers, bbox, scale_min);
+    if (!enc_.export_data(tile_data, layers, bbox, scale_min))
+    {
+        return false;
+    }
 
     // Create a cairo surface
     cairo_surface_t *surface =

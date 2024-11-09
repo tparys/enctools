@@ -60,8 +60,9 @@ public:
      * \param[in] layers Specified ENC layers (S57)
      * \param[in] bbox Data bounding box (deg)
      * \param[in] scale_min Minimum data compilation scale
+     * \return False if no data available
      */
-    void export_data(GDALDataset *ods, std::vector<std::string> layers,
+    bool export_data(GDALDataset *ods, std::vector<std::string> layers,
                      OGREnvelope bbox, int scale_min);
 
 private:
