@@ -362,8 +362,8 @@ void enc_renderer::set_color(cairo_t *cr, const color &c)
 {
     cairo_set_source_rgb(cr,
                          float(c.red) / 0xff,
-                         float(c.blue) / 0xff,
-                         float(c.green) / 0xff);
+                         float(c.green) / 0xff,
+                         float(c.blue) / 0xff);
 }
 
 }; // ~namespace encviz

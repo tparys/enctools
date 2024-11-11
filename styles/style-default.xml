@@ -8,8 +8,8 @@
   <!-- Land Areas -->
   <layer>
     <layer_name>LNDARE</layer_name>
-    <fill_color>00c</fill_color>
-    <line_color>00f</line_color>
+    <fill_color>C8B87A</fill_color>
+    <line_color>A8ACA1</line_color>
     <line_width>1</line_width>
     <marker_size>5</marker_size>
   </layer>
@@ -18,7 +18,7 @@
   <layer>
     <layer_name>SLCONS</layer_name>
     <fill_color>000</fill_color>
-    <line_color>000</line_color>
+    <line_color>989C92</line_color>
     <line_width>1</line_width>
     <marker_size>5</marker_size>
   </layer>
@@ -27,7 +27,7 @@
   <layer>
     <layer_name>DEPCNT</layer_name>
     <fill_color>000</fill_color>
-    <line_color>777</line_color>
+    <line_color>B2CBD6</line_color>
     <line_width>1</line_width>
     <marker_size>0</marker_size>
   </layer>
