@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<style xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="style.xsd">
+
+  <!-- White Background -->
+  <background>fff</background>
+
+  <!-- Land Areas -->
+  <layer>
+    <layer_name>LNDARE</layer_name>
+    <fill_color>00c</fill_color>
+    <line_color>00f</line_color>
+    <line_width>1</line_width>
+    <marker_size>5</marker_size>
+  </layer>
+
+  <!-- Shoreline Construction -->
+  <layer>
+    <layer_name>SLCONS</layer_name>
+    <fill_color>000</fill_color>
+    <line_color>000</line_color>
+    <line_width>1</line_width>
+    <marker_size>5</marker_size>
+  </layer>
+
+  <!-- Depth Contours -->
+  <layer>
+    <layer_name>DEPCNT</layer_name>
+    <fill_color>000</fill_color>
+    <line_color>777</line_color>
+    <line_width>1</line_width>
+    <marker_size>0</marker_size>
+  </layer>
+
+  <!-- Depth Soundings -->
+  <layer>
+    <layer_name>SOUNDG</layer_name>
+    <fill_color>000</fill_color>
+    <line_color>000</line_color>
+    <line_width>0</line_width>
+    <marker_size>0</marker_size>
+  </layer>
+
+</style>
+

@@ -7,22 +7,14 @@ target_link_libraries(hellobrowser encviz)
 add_executable(gdal_test gdal_test.cpp)
 target_link_libraries(gdal_test encviz)
 
-# MBTiles reader
-add_executable(mbtiles_reader mbtiles_reader.cpp)
-target_link_libraries(mbtiles_reader encviz)
-
-# MBTiles server
-add_executable(mbtiles_serve mbtiles_serve.cpp)
-target_link_libraries(mbtiles_serve encviz)
-
 # Cairo 2D graphics
 add_executable(cairo_stroke cairo_stroke.cpp)
 target_link_libraries(cairo_stroke encviz)
 
 # ENC index test
-add_executable(enc_index enc_index.cpp)
-target_link_libraries(enc_index encviz)
+add_executable(enc_tile_render enc_tile_render.cpp)
+target_link_libraries(enc_tile_render encviz)
 
-# ENC index test
-add_executable(enc_serve enc_serve.cpp)
-target_link_libraries(enc_serve encviz)
+# ENC WMTS tile server
+add_executable(enc_tile_server enc_tile_server.cpp)
+target_link_libraries(enc_tile_server encviz)

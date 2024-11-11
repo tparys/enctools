@@ -50,13 +50,15 @@ void enc_renderer::load_charts(const std::string &enc_root)
  * Render Chart Data
  *
  * \param[out] data PNG bytestream
- * \param[in] x Tile X coordinate (from left)
- * \param[in] y Tile Y coordinate (from bottom)
- * \param[in] z Tile zoom (power of 2)
+ * \param[in] tc Tile coordinate system (WMTS or XYZ)
+ * \param[in] x Tile X coordinate (horizontal)
+ * \param[in] y Tile Y coordinate (vertical)
+ * \param[in] z Tile Z coordinate (zoom)
+ * \param[in] style Tile styling data
  * \return False if no data to render
  */
-bool enc_renderer::render(std::vector<uint8_t> &data, int x, int y, int z,
-                          const render_style &style)
+bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
+                          int x, int y, int z, const render_style &style)
 {
     // Collect the layers we need
     std::vector<std::string> layers;
@@ -66,7 +68,7 @@ bool enc_renderer::render(std::vector<uint8_t> &data, int x, int y, int z,
     }
 
     // Get base tile boundaries
-    encviz::web_mercator wm(x, y, z, tile_size_);
+    encviz::web_mercator wm(x, y, z, tc, tile_size_);
     OGREnvelope bbox = wm.get_bbox_deg();
 
     // Oversample a bit so not clip text between tiles

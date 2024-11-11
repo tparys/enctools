@@ -10,9 +10,12 @@ namespace encviz
  * \param[in] x Tile x coordinate (TMS)
  * \param[in] y Tile y coordinate (TMS)
  * \param[in] y Tile z coordinate (TMS)
+ * \param[in] tc Tile coordinate system (WTMS or XYZ)
+ * \param[in] tile_size Tile side length in pixels
  * \param[in] tile_size Tile size in pixels
  */
-web_mercator::web_mercator(std::size_t x, std::size_t y, std::size_t z, int tile_size)
+web_mercator::web_mercator(std::size_t x, std::size_t y, std::size_t z,
+                           tile_coords tc, int tile_size)
 {
     // Nominal planet radius
     double radius = 6378137;
@@ -25,6 +28,13 @@ web_mercator::web_mercator(std::size_t x, std::size_t y, std::size_t z, int tile
 
     // Number of tiles at this zoom level
     std::size_t ntiles = (std::size_t)pow(2, z);
+
+    // All our math expects XYZ tile coordinates,
+    // will need to flip Y axis if using WTMS
+    if (tc == tile_coords::WTMS)
+    {
+        y = ntiles - y - 1;
+    }
 
     // Update side length, resolution
     tile_side /= ntiles;

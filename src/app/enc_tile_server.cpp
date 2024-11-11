@@ -73,17 +73,13 @@ MHD_Result request_handler(void *cls, struct MHD_Connection *connection,
 			     msg, strlen(msg));
     }
 
-    // WMS queries use TMS tile scheme, where MBTiles uses XYZ, with inverted Y axis
-    int ntiles = (int)pow(2, z);
-    y = ntiles - y - 1;
-
     // Get passed SQLite DB
     encviz::enc_renderer *enc_rend = (encviz::enc_renderer*)cls;
 
     // Render requested tile
     std::vector<uint8_t> out_bytes;
     printf("Tile X=%d, Y=%d, Z=%d\n", x, y, z);
-    if (enc_rend->render(out_bytes, x, y, z, style))
+    if (enc_rend->render(out_bytes, encviz::tile_coords::WTMS, x, y, z, style))
     {
         // Respond with rendered data
         return request_reply(connection, MHD_HTTP_OK,
@@ -102,7 +98,7 @@ int main(int argc, char **argv)
     // Check args
     if (argc < 2)
     {
-        printf("Usage: enc_index path/to/ENC_ROOT [x y z]\n");
+        printf("Usage: enc_index path/to/ENC_ROOT path/to/style.xml\n");
         return 1;
     }
 
@@ -112,6 +108,8 @@ int main(int argc, char **argv)
     // ENC renderer context
     encviz::enc_renderer enc_rend(256, 1e8);
     enc_rend.load_charts(argv[1]);
+    style = encviz::load_style(argv[2]);
+    printf("Loaded style from %s\n", argv[2]);
 
     // Start MHD
     MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | MHD_USE_THREAD_PER_CONNECTION,

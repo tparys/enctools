@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- RGB or ARGB hex color code -->
+  <xs:simpleType name="color_code">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9A-Fa-f]{3}|[0-9A-Fa-f]{4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Simple Layer Styling -->
+  <xs:complexType name="layer_style">
+    <xs:sequence>
+      <xs:element name="layer_name" type="xs:string"/>
+      <xs:element name="fill_color" type="color_code"/>
+      <xs:element name="line_color" type="color_code"/>
+      <xs:element name="line_width" type="xs:integer"/>
+      <xs:element name="marker_size" type="xs:integer"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="style">
+    <xs:complexType>
+      <xs:sequence>
+
+        <!-- Optional background, defaults to transparent if not set -->
+        <xs:element name="background" minOccurs="0" type="color_code"/>
+        <xs:element name="layer" type="layer_style" maxOccurs="unbounded"/>
+
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

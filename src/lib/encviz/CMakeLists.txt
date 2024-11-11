@@ -1,11 +1,12 @@
 add_library(encviz
   enc_dataset.cpp
   enc_renderer.cpp
+  style.cpp
   web_mercator.cpp
   )
 target_link_libraries(encviz
   ${CAIRO_LIBRARIES}
   ${GDAL_LIBRARIES}
   ${MICROHTTPD_LIBRARIES}
-  ${SQLITE3_LIBRARIES}
+  ${TINYXML2_LIBRARIES}
   )

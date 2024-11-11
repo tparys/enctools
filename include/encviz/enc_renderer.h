@@ -3,6 +3,7 @@
 #include <string>
 #include <cairo.h>
 #include <encviz/enc_dataset.h>
+#include <encviz/style.h>
 #include <encviz/web_mercator.h>
 
 namespace encviz
@@ -31,14 +32,15 @@ public:
      * Render Chart Data
      *
      * \param[out] data PNG bytestream
-     * \param[in] x Tile X coordinate (from left)
-     * \param[in] y Tile Y coordinate (from bottom)
-     * \param[in] z Tile zoom (power of 2)
+     * \param[in] tc Tile coordinate system (WMTS or XYZ)
+     * \param[in] x Tile X coordinate (horizontal)
+     * \param[in] y Tile Y coordinate (vertical)
+     * \param[in] z Tile Z coordinate (zoom)
      * \param[in] style Tile styling data
      * \return False if no data to render
      */
-    bool render(std::vector<uint8_t> &data, int x, int y, int z,
-                const render_style &style);
+    bool render(std::vector<uint8_t> &data, tile_coords tc,
+                int x, int y, int z, const render_style &style);
 
 private:
 

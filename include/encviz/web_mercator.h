@@ -14,11 +14,14 @@ public:
     /**
      * Constructor
      *
-     * \param[in] x Tile x coordinate (TMS)
-     * \param[in] y Tile y coordinate (TMS)
-     * \param[in] y Tile z coordinate (TMS)
+     * \param[in] x Tile x coordinate
+     * \param[in] y Tile y coordinate
+     * \param[in] y Tile z coordinate
+     * \param[in] tc Tile coordinate system (WTMS or XYZ)
+     * \param[in] tile_size Tile side length in pixels
      */
-    web_mercator(std::size_t x, std::size_t y, std::size_t z, int tile_size = 256);
+    web_mercator(std::size_t x, std::size_t y, std::size_t z,
+                 tile_coords tc = tile_coords::XYZ, int tile_size = 256);
 
     /**
      * Get bounding box in meters (EPSG:3875)
