@@ -37,23 +37,22 @@
         maxZoom: 19,
         attribution: '© OpenStreetMap'});
 
-    // OpenStreetMap "Hot" layer
-    var osmHOT = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'});
-
-    // ENCVIZ layer
-    var encviz = L.tileLayer('http://127.0.0.1:8888/{z}/{y}/{x}.png', {
+    // ENCVIZ layers
+    var encviz1 = L.tileLayer('http://127.0.0.1:8888/default/{z}/{y}/{x}.png', {
+        maxZoom: 30});
+    var encviz2 = L.tileLayer('http://127.0.0.1:8888/dusk/{z}/{y}/{x}.png', {
+        maxZoom: 30});
+    var encviz3 = L.tileLayer('http://127.0.0.1:8888/night/{z}/{y}/{x}.png', {
         maxZoom: 30});
 
     // Create layer manager
     var baseMaps = {
         "OpenStreetMap": osm,
-        "OpenStreetMap.HOT": osmHOT
+        "Default": encviz1,
+        "Dusk": encviz2,
+        "Night": encviz3
     };
-    var overlayMaps = {
-        "ENCVIZ": encviz
-    };
+    var overlayMaps = {};
     var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
 
   </script>

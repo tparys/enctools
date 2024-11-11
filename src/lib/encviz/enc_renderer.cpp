@@ -1,4 +1,6 @@
 #include <encviz/enc_renderer.h>
+#include <encviz/xml_config.h>
+namespace fs = std::filesystem;
 
 namespace encviz
 {
@@ -30,20 +32,20 @@ static cairo_status_t cairo_write_to_vector(void *closure,
  * \param[in] tile_size Dimension of output image
  * \param[in] min_scale0 Min display scale at zoom=0
  */
-enc_renderer::enc_renderer(int tile_size, double min_scale0)
-    : tile_size_(tile_size)
-    , min_scale0_(min_scale0)
+enc_renderer::enc_renderer(const char *config_path)
 {
-}
-
-/**
- * Recursively Load ENC Charts
- *
- * \param[in] enc_root ENC_ROOT base directory
- */
-void enc_renderer::load_charts(const std::string &enc_root)
-{
-    enc_.load_charts(enc_root);
+    // Load specified, or default config path
+    if (config_path != nullptr)
+    {
+        load_config(config_path);
+    }
+    else
+    {
+        // Default to ~/.encviz
+        fs::path default_path = getenv("HOME");
+        default_path.append(".encviz");
+        load_config(default_path);
+    }
 }
 
 /**
@@ -58,8 +60,15 @@ void enc_renderer::load_charts(const std::string &enc_root)
  * \return False if no data to render
  */
 bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
-                          int x, int y, int z, const render_style &style)
+                          int x, int y, int z, const char *style_name)
 {
+    // Grab the style we need
+    if (styles_.find(style_name) == styles_.end())
+    {
+        return false;
+    }
+    const render_style &style = styles_[style_name];
+
     // Collect the layers we need
     std::vector<std::string> layers;
     for (const layer_style &lstyle : style.layers)
@@ -364,6 +373,62 @@ void enc_renderer::set_color(cairo_t *cr, const color &c)
                          float(c.red) / 0xff,
                          float(c.green) / 0xff,
                          float(c.blue) / 0xff);
+}
+
+/**
+ * Load Configuration
+ *
+ * \param[in] config_path
+ */
+void enc_renderer::load_config(const fs::path &config_path)
+{
+    printf("Using config directory: %s ...\n", config_path.string().c_str());
+
+    // Load XML document 
+    fs::path config_file = config_path / "config.xml";
+    printf(" - Reading %s ...\n", config_file.string().c_str());
+    tinyxml2::XMLDocument doc;
+    if (doc.LoadFile(config_file.string().c_str()))
+    {
+        // Parse error?
+        throw std::runtime_error("Cannot parse " + config_file.string());
+    }
+
+    // Read in config
+    tinyxml2::XMLElement *root = doc.RootElement();
+    fs::path chart_path = xml_text(xml_query(root, "chart_path"));
+    fs::path meta_path = xml_text(xml_query(root, "meta_path"));
+    fs::path style_path = xml_text(xml_query(root, "style_path"));
+    tile_size_ = atoi(xml_text(xml_query(root, "tile_size")));
+    min_scale0_ = atof(xml_text(xml_query(root, "scale_base")));
+
+    // Ensure paths are absolute
+    if (chart_path.is_relative())
+        chart_path = config_path / chart_path;
+    if (meta_path.is_relative())
+        meta_path = config_path / meta_path;
+    if (style_path.is_relative())
+        style_path = config_path / style_path;
+
+    printf(" - Charts: %s\n", chart_path.string().c_str());
+    printf(" - Metadata: %s\n", meta_path.string().c_str());
+    printf(" - Styles: %s\n", style_path.string().c_str());
+    printf(" - Tile Size: %d\n", tile_size_);
+    printf(" - Scale Base: %g\n", min_scale0_);
+
+    // Load charts
+    enc_.set_cache_path(meta_path);
+    enc_.load_charts(chart_path);
+
+    // Load styles
+    for (const fs::directory_entry &entry : fs::directory_iterator(style_path))
+    {
+        fs::path p = entry.path();
+        if (p.extension() == ".xml")
+        {
+            styles_[p.stem().string()] = load_style(p.string());
+        }
+    }
 }
 
 }; // ~namespace encviz

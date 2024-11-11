@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<encviz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="config.xsd">
+
+  <!-- Location of ENC charts -->
+  <chart_path>charts</chart_path>
+
+  <!-- Location to store ENC metadata -->
+  <meta_path>meta</meta_path>
+
+  <!-- Location to store render styles -->
+  <style_path>style</style_path>
+
+  <!-- Size of rendered tiles -->
+  <tile_size>256</tile_size>
+
+  <!-- Minimum presentation scale at tile zoom level 0 -->
+  <scale_base>1e8</scale_base>
+
+</encviz>

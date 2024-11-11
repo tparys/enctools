@@ -2,34 +2,13 @@
 #include <sstream>
 #include <stdexcept>
 #include <encviz/style.h>
+#include <encviz/xml_config.h>
 
 #define GET8(x, y) (0xff & ((x) >> (y)))
 #define GET4(x, y) (0x11 * (0xf & ((x) >> (y))))
 
 namespace encviz
 {
-
-/**
- * Get Node Text with Checking
- *
- * \param[in] node Element with text
- * \return Tag text
- */
-const char *tag_text(tinyxml2::XMLElement *node)
-{
-    if (node == nullptr)
-    {
-        throw std::runtime_error("Cannot get text from null element");
-    }
-    const char *ptr = node->GetText();
-    if (ptr == nullptr)
-    {
-        std::ostringstream oss;
-        oss << "Tag <" << node->Name() << "> may not be empty";
-        throw std::runtime_error(oss.str());
-    }
-    return ptr;
-}
 
 /**
  * Parse Color Code
@@ -46,7 +25,7 @@ const char *tag_text(tinyxml2::XMLElement *node)
 color parse_color(tinyxml2::XMLElement *node)
 {
     // Compute length of color code
-    const char *code = tag_text(node);
+    const char *code = xml_text(node);
     int len = strlen(code);
 
     // Ensure this parses correctly as a hex code
@@ -115,47 +94,13 @@ layer_style parse_layer(tinyxml2::XMLElement *node)
         throw std::runtime_error("Layer style may not be null");
     }
 
+    // Parse layer XML
     layer_style parsed;
-
-    // Tick through children
-    for (tinyxml2::XMLElement *child = node->FirstChildElement();
-         child != nullptr;
-         child = child->NextSiblingElement())
-    {
-        // What sort of tag is this?
-        const char *tag = child->Name();
-
-        if (strcmp(tag, "layer_name") == 0)
-        {
-            // Set background
-            parsed.layer_name = tag_text(child);
-        }
-        else if (strcmp(tag, "fill_color") == 0)
-        {
-            // Set fill color
-            parsed.fill_color = parse_color(child);
-        }
-        else if (strcmp(tag, "line_color") == 0)
-        {
-            // Set line color
-            parsed.line_color = parse_color(child);
-        }
-        else if (strcmp(tag, "line_width") == 0)
-        {
-            // Set line color
-            parsed.line_width = atoi(tag_text(child));
-        }
-        else if (strcmp(tag, "marker_size") == 0)
-        {
-            // Set line color
-            parsed.marker_size = atoi(tag_text(child));
-        }
-        else
-        {
-            printf("ERROR: Unknown tag <%s>\n", tag);
-        }
-    }
-    
+    parsed.layer_name = xml_text(xml_query(node, "layer_name"));
+    parsed.fill_color = parse_color(xml_query(node, "fill_color"));
+    parsed.line_color = parse_color(xml_query(node, "line_color"));
+    parsed.line_width = atoi(xml_text(xml_query(node, "line_width")));
+    parsed.marker_size = atoi(xml_text(xml_query(node, "marker_size")));
     return parsed;
 }
 
@@ -175,29 +120,17 @@ render_style load_style(const std::string &filename)
         throw std::runtime_error("Cannot parse " + filename);
     }
 
-    render_style parsed;
-
-    // Tick through children
+    // Load Style
     tinyxml2::XMLElement *root = doc.RootElement();
-    for (tinyxml2::XMLElement *child = root->FirstChildElement();
-         child != nullptr;
-         child = child->NextSiblingElement())
+    render_style parsed;
+    try
     {
-        // What sort of tag is this?
-        const char *tag = child->Name();
-        if (strcmp(tag, "background") == 0)
-        {
-            // Set background
-            parsed.background = parse_color(child);
-        }
-        else if (strcmp(tag, "layer") == 0)
-        {
-            parsed.layers.push_back(parse_layer(child));
-        }
-        else
-        {
-            printf("ERROR: Unknown tag <%s>\n", tag);
-        }
+        parsed.background = parse_color(xml_query(root, "background"));
+    }
+    catch (...) {}
+    for (tinyxml2::XMLElement *child : xml_query_all(root, "layer"))
+    {
+        parsed.layers.push_back(parse_layer(child));
     }
     
     return parsed;

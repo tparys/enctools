@@ -9,17 +9,15 @@
 void usage(int exit_code)
 {
     printf("Usage:\n"
-           "  enc_tile_render [opts] <ENC_ROOT> <STYLE.xml> <X> <Y> <Z>\n"
+           "  enc_tile_render [opts] <X> <Y> <Z>\n"
            "\n"
            "Options:\n"
            "  -h         - Show help\n"
-           "  -c <type>  - Set tile system (wmts or xyz, default=xyz)\n"
+           "  -c <path>  - Set config directory (default=~/.config)\n"
            "  -o <file>  - Set output file (default=out.png)\n"
-           "  -s <value> - Set min display scale at zoom = 0, default=1e9\n"
-           "  -t <size>  - Set tile size (default=256)\n"
+           "  -s <name>  - Set render style (default=default)\n"
            "\n"
            "Where:\n"
-           "  ENC ROOT   - Path to folder containing ENC charts\n"
            "  X          - Horizontal tile coordinate\n"
            "  Y          - Vertical tile coordinate\n"
            "  Z          - Zoom tile coordinate\n");
@@ -29,13 +27,13 @@ void usage(int exit_code)
 int main(int argc, char **argv)
 {
     int opt;
-    int tile_size = 256;
-    double scale0 = 1e9;
     encviz::tile_coords tc = encviz::tile_coords::XYZ;
     std::string out_file = "out.png";
+    const char *config_path = nullptr;
+    const char *style_name = "default";
 
     // Parse args
-    while ((opt = getopt(argc, argv, "hc:o:s:t:")) != -1)
+    while ((opt = getopt(argc, argv, "hc:o:s:")) != -1)
     {
         switch (opt)
         {
@@ -45,20 +43,8 @@ int main(int argc, char **argv)
                 break;
 
             case 'c':
-                // Set tile coordinate system
-                if (strcmp(optarg, "xyz") == 0)
-                {
-                    tc = encviz::tile_coords::XYZ;
-                }
-                else if (strcmp(optarg, "wtms") == 0)
-                {
-                    tc = encviz::tile_coords::WTMS;
-                }
-                else
-                {
-                    printf("Invalid tile coordinate system: %s\n\n", optarg);
-                    usage(1);
-                }
+                // Set config path
+                config_path = optarg;
                 break;
 
             case 'o':
@@ -68,12 +54,7 @@ int main(int argc, char **argv)
 
             case 's':
                 // Set min display scale
-                scale0 = atof(optarg);
-                break;
-
-            case 't':
-                // Set tile size
-                tile_size = atoi(optarg);
+                style_name = optarg;
                 break;
 
             default:
@@ -82,23 +63,20 @@ int main(int argc, char **argv)
                 break;
         }
     }
-    if ((argc - optind) < 5)
+    if ((argc - optind) < 3)
     {
         usage(1);
     }
-    int x = std::atoi(argv[optind + 2]);
-    int y = std::atoi(argv[optind + 3]);
-    int z = std::atoi(argv[optind + 4]);
+    int x = std::atoi(argv[optind + 0]);
+    int y = std::atoi(argv[optind + 1]);
+    int z = std::atoi(argv[optind + 2]);
 
     // Global GDAL Initialization
     GDALAllRegister();
 
-    encviz::render_style style = encviz::load_style(argv[optind + 1]);
-
     std::vector<uint8_t> png_bytes;
-    encviz::enc_renderer enc_rend(tile_size, scale0);
-    enc_rend.load_charts(argv[optind]);
-    enc_rend.render(png_bytes, tc, x, y, z, style);
+    encviz::enc_renderer enc_rend(config_path);
+    enc_rend.render(png_bytes, tc, x, y, z, style_name);
 
     // Dump to file
     printf("Writing %lu bytes\n", png_bytes.size());

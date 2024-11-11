@@ -58,14 +58,6 @@ struct render_style
 };
 
 /**
- * Get Node Text with Checking
- *
- * \param[in] node Element with text
- * \return Tag text
- */
-const char *tag_text(tinyxml2::XMLElement *node);
-
-/**
  * Parse Color Code
  *
  * Color code pattern can be one of:

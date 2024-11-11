@@ -13,41 +13,30 @@
 
 #define PORT 8888
 
-// FIXME - Sloppy global
-encviz::render_style style = {
-    // Background color
-    {{ 255, 255, 255 }},
+void usage(int exit_code)
+{
+    printf("Usage:\n"
+           "  enc_tile_server [opts]\n"
+           "\n"
+           "Options:\n"
+           "  -h         - Show help\n"
+           "  -c <path>  - Set config directory (default=~/.config)\n");
+    exit(exit_code);
+}
 
-    // Layer styles
+std::vector<std::string> string_split(std::string input)
+{
+    std::vector<std::string> tokens;
+    size_t pos;
+    while ((pos = input.find('/')) != std::string::npos)
     {
-        {
-            { "LNDARE",
-              { 0, 192, 0 },
-              { 0, 255, 0 },
-              1,
-              5
-            },
-            { "SLCONS",
-              { 0, 0, 0 },
-              { 0, 0, 0 },
-              1,
-              5
-            },
-            { "DEPCNT",
-              {},
-              { 128, 128, 128 },
-              1,
-              0
-            },
-            { "SOUNDG",
-              {},
-              {},
-              0,
-              0
-            }
-        }
+        tokens.push_back(input.substr(0, pos));
+        input = input.substr(pos + 1);
     }
-};
+    tokens.push_back(input);
+
+    return tokens;
+}
 
 MHD_Result request_reply(MHD_Connection *conn, int code, const void *data, int len)
 {
@@ -65,13 +54,17 @@ MHD_Result request_handler(void *cls, struct MHD_Connection *connection,
 {
     // Parse URL
     printf("URL: %s\n", url);
-    int x, y, z;
-    if (sscanf(url, "/%d/%d/%d", &z, &y, &x) != 3)
+    std::vector<std::string> tokens = string_split(url);
+    if (tokens.size() != 5)
     {
 	const char *msg = "Invalid URL";
 	return request_reply(connection, MHD_HTTP_BAD_REQUEST,
 			     msg, strlen(msg));
     }
+    std::string style_name = tokens[1];
+    int z = std::stoi(tokens[2]);
+    int y = std::stoi(tokens[3]);
+    int x = std::stoi(tokens[4]);
 
     // Get passed SQLite DB
     encviz::enc_renderer *enc_rend = (encviz::enc_renderer*)cls;
@@ -79,7 +72,8 @@ MHD_Result request_handler(void *cls, struct MHD_Connection *connection,
     // Render requested tile
     std::vector<uint8_t> out_bytes;
     printf("Tile X=%d, Y=%d, Z=%d\n", x, y, z);
-    if (enc_rend->render(out_bytes, encviz::tile_coords::WTMS, x, y, z, style))
+    if (enc_rend->render(out_bytes, encviz::tile_coords::WTMS, x, y, z,
+                         style_name.c_str()))
     {
         // Respond with rendered data
         return request_reply(connection, MHD_HTTP_OK,
@@ -95,21 +89,36 @@ MHD_Result request_handler(void *cls, struct MHD_Connection *connection,
 
 int main(int argc, char **argv)
 {
-    // Check args
-    if (argc < 2)
+    int opt;
+    const char *config_path = nullptr;
+
+    // Parse args
+    while ((opt = getopt(argc, argv, "hc:")) != -1)
     {
-        printf("Usage: enc_index path/to/ENC_ROOT path/to/style.xml\n");
-        return 1;
+        switch (opt)
+        {
+            case 'h':
+                // Help text
+                usage(0);
+                break;
+
+            case 'c':
+                // Set config path
+                config_path = optarg;
+                break;
+
+            default:
+                // Invalid arg / missing argument
+                usage(1);
+                break;
+        }
     }
 
     // Global GDAL Initialization
     GDALAllRegister();
 
     // ENC renderer context
-    encviz::enc_renderer enc_rend(256, 1e8);
-    enc_rend.load_charts(argv[1]);
-    style = encviz::load_style(argv[2]);
-    printf("Loaded style from %s\n", argv[2]);
+    encviz::enc_renderer enc_rend(config_path);
 
     // Start MHD
     MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | MHD_USE_THREAD_PER_CONNECTION,

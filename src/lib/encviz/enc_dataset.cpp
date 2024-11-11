@@ -23,11 +23,20 @@ enc_dataset::enc_dataset()
         cache_ = phome;
         cache_ += "/.encviz";
     }
-    printf("Cache location is %s\n", cache_.c_str());
 
     // Get GDAL driver
     mem_drv_ = GetGDALDriverManager()->GetDriverByName("Memory");
     CHECKNULL(mem_drv_, "Cannot load OGR memory driver");
+}
+
+/**
+ * Set Cache Path
+ *
+ * \param[in] cache_path Specified cache path
+ */
+void enc_dataset::set_cache_path(const std::filesystem::path &cache_path)
+{
+    cache_ = cache_path;
 }
 
 /**

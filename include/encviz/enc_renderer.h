@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <filesystem>
 #include <cairo.h>
 #include <encviz/enc_dataset.h>
 #include <encviz/style.h>
@@ -16,17 +17,9 @@ public:
     /**
      * Constructor
      *
-     * \param[in] tile_size Dimension of output image
-     * \param[in] min_scale0 Min display scale at zoom=0
+     * \param[in] config_path Path to configuration
      */
-    enc_renderer(int tile_size, double min_scale0);
-
-    /**
-     * Recursively Load ENC Charts
-     *
-     * \param[in] enc_root ENC_ROOT base directory
-     */
-    void load_charts(const std::string &enc_root);
+    enc_renderer(const char *config_path = nullptr);
 
     /**
      * Render Chart Data
@@ -36,11 +29,11 @@ public:
      * \param[in] x Tile X coordinate (horizontal)
      * \param[in] y Tile Y coordinate (vertical)
      * \param[in] z Tile Z coordinate (zoom)
-     * \param[in] style Tile styling data
+     * \param[in] style_name Name of style
      * \return False if no data to render
      */
     bool render(std::vector<uint8_t> &data, tile_coords tc,
-                int x, int y, int z, const render_style &style);
+                int x, int y, int z, const char *style_name);
 
 private:
 
@@ -107,6 +100,13 @@ private:
      */
     void set_color(cairo_t *cr, const color &c);
 
+    /**
+     * Load Configuration
+     *
+     * \param[in] config_path
+     */
+    void load_config(const std::filesystem::path &config_path);
+
     /// Dimension of output image
     int tile_size_;
 
@@ -115,6 +115,9 @@ private:
 
     /// Chart collection
     enc_dataset enc_;
+
+    /// Loaded styles
+    std::map<std::string, render_style> styles_;
 };
 
 }; // ~namespace encviz

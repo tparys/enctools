@@ -31,6 +31,13 @@ public:
     enc_dataset();
 
     /**
+     * Set Cache Path
+     *
+     * \param[in] cache_path Specified cache path
+     */
+    void set_cache_path(const std::filesystem::path &cache_path);
+
+    /**
      * Clear Chart Index
      */
     void clear();
