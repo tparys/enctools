@@ -55,6 +55,38 @@
     var overlayMaps = {};
     var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
 
+    // Mouse Lat/Long
+    let Position = L.Control.extend({ 
+        _container: null,
+        options: {
+            position: 'bottomleft'
+        },
+
+        onAdd: function (map) {
+            var latlng = L.DomUtil.create('div', 'mouseposition');
+            this._latlng = latlng;
+            return latlng;
+        },
+
+        updateHTML: function(lat, lng) {
+            var latlng = lat + " " + lng;
+            this._latlng.innerHTML = "Lat: " + lat + "   Long: " + lng;
+            //this._latlng.innerHTML = "LatLng: " + latlng;
+        }
+    });
+    var pos_ctl = new Position();
+    //this.leafletMap.addControl(this.position);
+    map.addControl(pos_ctl);
+
+    map.addEventListener('mousemove', (event) => {
+        let lat = Math.round(event.latlng.lat * 100000) / 100000;
+        let lng = Math.round(event.latlng.lng * 100000) / 100000;
+        pos_ctl.updateHTML(lat, lng);
+    });
+
+    // Add map scale
+    L.control.scale().addTo(map);
+
   </script>
 
 </body>

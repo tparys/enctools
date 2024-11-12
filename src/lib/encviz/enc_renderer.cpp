@@ -91,10 +91,14 @@ bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
         bbox.MaxY += oversample * (height/2);
     }
 
+    // Compute minimum presentation scale, based on average latitude and zoom
+    // TODO - Is this the right computation?
+    double avgLat = (bbox.MinY + bbox.MaxY) / 2;
+    int scale_min = (int)round(min_scale0_ * cos(avgLat * M_PI / 180) / pow(2, z));
+
     // Export all data in this tile
     GDALDataset *tile_data = GetGDALDriverManager()->GetDriverByName("Memory")->
         Create("", 0, 0, 0, GDT_Unknown, nullptr);
-    int scale_min = (int)round(min_scale0_ / pow(2, z));
     if (!enc_.export_data(tile_data, layers, bbox, scale_min))
     {
         return false;
@@ -369,10 +373,11 @@ void enc_renderer::render_poly(cairo_t *cr, const OGRPolygon *geo,
  */
 void enc_renderer::set_color(cairo_t *cr, const color &c)
 {
-    cairo_set_source_rgb(cr,
-                         float(c.red) / 0xff,
-                         float(c.green) / 0xff,
-                         float(c.blue) / 0xff);
+    cairo_set_source_rgba(cr,
+                          float(c.red) / 0xff,
+                          float(c.green) / 0xff,
+                          float(c.blue) / 0xff,
+                          float(c.alpha) / 0xff);
 }
 
 /**
