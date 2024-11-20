@@ -1,4 +1,12 @@
 #pragma once
+
+/**
+ * \file
+ * \brief XML Parsing
+ *
+ * Utility functions for parsing through XML documents.
+ */
+
 #include <string>
 #include <vector>
 #include <tinyxml2.h>

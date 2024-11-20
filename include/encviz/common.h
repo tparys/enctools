@@ -1,5 +1,12 @@
 #pragma once
 
+/**
+ * \file
+ * \brief Common Definitions
+ *
+ * Common structure and type definitions used throughout the code.
+ */
+
 #include <cstdint>
 
 namespace encviz

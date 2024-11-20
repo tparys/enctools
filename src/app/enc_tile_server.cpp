@@ -1,5 +1,16 @@
-/* Feel free to use this example code in any way
-   you see fit (Public Domain) */
+/**
+ * \file
+ * \brief ENC Tile Server (WMTS)
+ *
+ * Minimal WMTS style tile server to dynamically render ENC(S-57) chart data
+ * to PNG files, delivered over HTTP port 8888.
+ *
+ * NOTE: Set your tile server to:
+ *   http://127.0.0.1:8888/<STYLE>/{z}/{y}/{x}.png
+ *
+ * Where "STYLE" is one of the defined chart styles (ie - "default"), and X/Y/Z
+ * refer to the WTMS tile coordinates.
+ */
 
 #include <cstdio>
 #include <cstdlib>

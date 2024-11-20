@@ -1,4 +1,13 @@
 #pragma once
+
+/**
+ * \file
+ * \brief Web Mercator
+ *
+ * C++ class to handle coordinate conversions between WGS84 (EPSG:4326), Web
+ * Mercator (EPSG:3857), and WMS tiles.
+ */
+
 #include <cstddef>
 #include <ogr_core.h>
 #include <ogr_geometry.h>

@@ -1,3 +1,10 @@
+/**
+ * \file
+ * \brief XML Parsing
+ *
+ * Utility functions for parsing through XML documents.
+ */
+
 #include <stdexcept>
 #include <encviz/xml_config.h>
 

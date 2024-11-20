@@ -1,3 +1,10 @@
+/**
+ * \file
+ * \brief ENC Layer Styles
+ *
+ * Structures and definitions for loading information on styling ENC(S-57) data.
+ */
+
 #include <cstdio>
 #include <sstream>
 #include <stdexcept>

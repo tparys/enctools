@@ -1,4 +1,12 @@
 #pragma once
+
+/**
+ * \file
+ * \brief ENC Renderer
+ *
+ * C++ abstraction class to handle visualization of ENC(S-57) chart data.
+ */
+
 #include <cstdint>
 #include <string>
 #include <filesystem>

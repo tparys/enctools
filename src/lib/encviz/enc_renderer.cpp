@@ -1,3 +1,10 @@
+/**
+ * \file
+ * \brief ENC Renderer
+ *
+ * C++ abstraction class to handle visualization of ENC(S-57) chart data.
+ */
+
 #include <encviz/enc_renderer.h>
 #include <encviz/xml_config.h>
 namespace fs = std::filesystem;

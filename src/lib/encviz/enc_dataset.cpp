@@ -1,3 +1,12 @@
+/**
+ * \file
+ * \brief ENC Dataset
+ *
+ * C++ abstraction class to wrap and encapsulate all operations for searching
+ * through ENC(S-57) datasets, indexing them, and extracting portions of that
+ * data for later handling.
+ */
+
 #include <iostream>
 #include <fstream>
 #include <algorithm>

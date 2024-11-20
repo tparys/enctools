@@ -1,3 +1,14 @@
+/**
+ * \file
+ * \brief ENC Tile Render (Command Line)
+ *
+ * Minimal Command Line Interface (CLI) to render a single TMS tile.
+ *
+ * Note that this CLI tool uses the internal XYZ tile coordinates that start at
+ * bottom left of map, instead of WTMS used by the tile server that starts at
+ * top left.
+ */
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
