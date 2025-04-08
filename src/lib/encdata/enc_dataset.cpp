@@ -12,12 +12,12 @@
 #include <algorithm>
 #include <filesystem>
 #include <memory>
-#include <encviz/enc_dataset.h>
+#include <encdata/enc_dataset.h>
 
 // Helper macro for data presence
 #define CHECKNULL(ptr, msg) if ((ptr) == nullptr) throw std::runtime_error((msg))
 
-namespace encviz
+namespace encdata
 {
 
 /**

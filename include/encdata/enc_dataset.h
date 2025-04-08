@@ -15,7 +15,7 @@
 #include <gdal_priv.h>
 #include <ogrsf_frmts.h>
 
-namespace encviz
+namespace encdata
 {
 
 /// Wrapper class to handle ENC data requests

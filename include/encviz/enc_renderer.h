@@ -11,7 +11,7 @@
 #include <string>
 #include <filesystem>
 #include <cairo.h>
-#include <encviz/enc_dataset.h>
+#include <encdata/enc_dataset.h>
 #include <encviz/style.h>
 #include <encviz/web_mercator.h>
 
@@ -122,7 +122,7 @@ private:
     double min_scale0_;
 
     /// Chart collection
-    enc_dataset enc_;
+    encdata::enc_dataset enc_;
 
     /// Loaded styles
     std::map<std::string, render_style> styles_;

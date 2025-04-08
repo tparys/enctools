@@ -10,6 +10,9 @@ if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
 endif()
 
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
 # Required Libraries
 include(FindPkgConfig)
 pkg_check_modules(CAIRO REQUIRED cairo)
@@ -17,6 +20,7 @@ pkg_check_modules(GDAL REQUIRED gdal)
 pkg_check_modules(GTEST gtest_main gtest)
 pkg_check_modules(MICROHTTPD REQUIRED libmicrohttpd)
 pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
+find_package(CGAL REQUIRED COMPONENTS Qt5)
 
 # Header locations
 include_directories(
@@ -30,8 +34,6 @@ include_directories(
 # Organize build products
 set(LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin")
-
-set(CMAKE_CXX_FLAGS "-O2 -Wall")
 
 # Build source code
 add_subdirectory(src)

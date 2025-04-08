@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gdal.h>
-#include <encviz/enc_dataset.h>
 #include <encviz/enc_renderer.h>
 #include <encviz/web_mercator.h>
 

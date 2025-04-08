@@ -1,0 +1,10 @@
+add_definitions(-DCGAL_USE_BASIC_VIEWER)
+add_library(enctri
+  triangulator.cpp
+  enc_triangulator.cpp
+  )
+target_link_libraries(enctri
+  ${GDAL_LIBRARIES}
+  CGAL::CGAL
+  CGAL::CGAL_Qt5
+  )
