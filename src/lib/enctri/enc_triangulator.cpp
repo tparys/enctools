@@ -83,12 +83,10 @@ void enc_triangulator::load_soundings()
 
         switch (gtype)
         {
-            case wkbPoint: // 1
             case wkbPoint25D: // 0x80000001
                 add_point(convert_ogrpoint3d(geo->toPoint()));
                 break;
 
-            case wkbMultiPoint: // 4
             case wkbMultiPoint25D: // 0x80000004
                 for (const OGRPoint *child : geo->toMultiPoint())
                 {
@@ -112,6 +110,19 @@ encdata::path_2d enc_triangulator::convert_ogrpoly(const OGRPolygon *poly)
     {
         points.push_back(convert_ogrpoint2d(&point));
     }
+
+    // OGR polygons repeat first point as last, as we don't really want/need
+    // repeat points in the triangulation
+    if (points.size() > 2)
+    {
+        size_t last = points.size() - 1;
+        if ((points[0].x == points[last].x) &&
+            (points[0].y == points[last].y))
+        {
+            points.resize(points.size() - 1);
+        }
+    }
+
     return points;
 }
 
@@ -134,11 +145,7 @@ encdata::point_2d enc_triangulator::convert_ogrpoint2d(const OGRPoint *point)
 
 encdata::point_3d enc_triangulator::convert_ogrpoint3d(const OGRPoint *point)
 {
-    encdata::point_3d p = { point->getX(), point->getY(), 0 };
-    if (point->getDimension() > 2)
-    {
-        p.z = point->getZ();
-    }
+    encdata::point_3d p = { point->getX(), point->getY(), point->getZ() };
     return p;
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <vector>
 #include <encdata/geometry.h>
 
 namespace enctri
@@ -8,6 +10,16 @@ namespace enctri
 class triangulator
 {
 public:
+
+    // Triangle face by vertex index
+    typedef std::array<size_t, 3> face;
+
+    /// Output data structure
+    struct mesh
+    {
+        std::vector<encdata::point_3d> points;
+        std::vector<face> faces;
+    };
 
     /**
      * Constructor
@@ -23,6 +35,13 @@ public:
      * Draw triangulation (Qt)
      */
     void draw();
+
+    /**
+     * Get triangulation
+     *
+     * \return Internal triangulation
+     */
+    mesh get();
 
     /**
      * Insert single 3D point
@@ -60,7 +79,6 @@ private:
 
     /// Internal pointer to Constrained Delaunay triangulation
     void *ptr_;
-
 };
 
 }; // ~namespace enctri
