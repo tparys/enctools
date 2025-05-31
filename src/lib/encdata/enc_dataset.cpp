@@ -97,9 +97,43 @@ bool enc_dataset::load_chart(const std::filesystem::path &path)
  * \param[in] scale_min Minimum data compilation scale
  * \return False if no data available
  */
-bool enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
-                              OGREnvelope bbox, int scale_min)
+bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &layers,
+                              const OGREnvelope &bbox, int scale_min)
 {
+    // Define polygon boundary first
+    OGRLinearRing ring;
+    ring.addPoint(bbox.MinX, bbox.MinY);
+    ring.addPoint(bbox.MaxX, bbox.MinY);
+    ring.addPoint(bbox.MaxX, bbox.MaxY);
+    ring.addPoint(bbox.MinX, bbox.MaxY);
+    ring.addPoint(bbox.MinX, bbox.MinY);
+
+    // Define the polygon
+    OGRPolygon poly;
+    poly.addRing(&ring);
+
+    return export_data(ods, layers, poly, scale_min);
+}
+
+/**
+ * Export ENC Data to Empty Dataset
+ *
+ * Creates specified layers in output dataset, populating with best data
+ * available for given bounding box and minimum presentation scale.
+ *
+ * \param[out] ds Output dataset
+ * \param[in] layers Specified ENC layers (S57)
+ * \param[in] poly Data bounds (deg)
+ * \param[in] scale_min Minimum data compilation scale
+ * \return False if no data available
+ */
+bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &layers,
+                              const OGRPolygon &poly, int scale_min)
+{
+    // Query bounding box
+    OGREnvelope bbox;
+    poly.getEnvelope(&bbox);
+
     printf("Filter: Scale=%d, BBOX=(%g to %g),(%g to %g)\n",
            scale_min, bbox.MinX, bbox.MaxX, bbox.MinY, bbox.MaxY);
 
@@ -144,7 +178,7 @@ bool enc_dataset::export_data(GDALDataset *ods, std::vector<std::string> layers,
     OGRLayer *result_layer = create_layer(temp_ds.get(), "");
 
     // Clip layer will track missing coverage
-    create_bbox_feature(clip_layer, bbox);
+    create_poly_feature(clip_layer, poly);
 
     // Process charts one at a time to reduce repeated S57 parses
     for (const auto &chart : selected)
@@ -443,28 +477,16 @@ void enc_dataset::clear_layer(OGRLayer *layer)
 }
 
 /**
- * Bounding Box to Layer Feature
+ * Polygon to Layer Feature
  *
  * \param[out] layer GDAL output layer
- * \param[in] bbox OGR Envelope
+ * \param[in] poly OGR Polygon
  */
-void enc_dataset::create_bbox_feature(OGRLayer *layer, const OGREnvelope &bbox)
+void enc_dataset::create_poly_feature(OGRLayer *layer, const OGRPolygon &poly)
 {
-    // Define polygon boundary first
-    OGRLinearRing geo_ring;
-    geo_ring.addPoint(bbox.MinX, bbox.MinY);
-    geo_ring.addPoint(bbox.MaxX, bbox.MinY);
-    geo_ring.addPoint(bbox.MaxX, bbox.MaxY);
-    geo_ring.addPoint(bbox.MinX, bbox.MaxY);
-    geo_ring.addPoint(bbox.MinX, bbox.MinY);
-
-    // Define the polygon
-    OGRPolygon geo_poly;
-    geo_poly.addRing(&geo_ring);
-
     // Create a feature based on the output layer
     OGRFeature feat(layer->GetLayerDefn());
-    feat.SetGeometry(&geo_poly);
+    feat.SetGeometry(&poly);
 
     // Add to layer
     if (layer->CreateFeature(&feat) != OGRERR_NONE)
