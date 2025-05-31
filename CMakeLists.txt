@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.16)
 project(encviz)
 
 # Need C++17
@@ -21,6 +21,24 @@ pkg_check_modules(GTEST gtest_main gtest)
 pkg_check_modules(MICROHTTPD REQUIRED libmicrohttpd)
 pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
 find_package(CGAL REQUIRED COMPONENTS Qt5)
+
+# Earlier versions of microhttpd don't define MHD_Result,
+# and just use an int in it's place, so detect that ...
+try_compile(MICROHTTP_HAS_MHD_RESULT
+  ${CMAKE_BINARY_DIR}/compile_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/microhttpd_mhd_result.c)
+if (NOT MICROHTTP_HAS_MHD_RESULT)
+  add_compile_definitions(MHD_Result=int)
+endif()
+
+# Some versions of CGAL don't have an easy way to draw
+# Constrained Delaunay Triangulations (CDTs)
+try_compile(CGAL_HAS_DRAW_CDT
+  ${CMAKE_BINARY_DIR}/compile_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cgal_draw_triangulation.c)
+if (NOT CGAL_HAS_DRAW_CDT)
+  add_compile_definitions(CGAL_NO_DRAW_CDT)
+endif()
 
 # Header locations
 include_directories(
