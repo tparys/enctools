@@ -81,7 +81,7 @@ void triangulator::draw()
  * \param[out] points 3D coordinates
  * \param[out] faces Vertex indeces
  */
-triangulator::mesh triangulator::get()
+mesh triangulator::get()
 {
     mesh out;
 

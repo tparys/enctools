@@ -16,6 +16,13 @@ struct point_2d
     double y;
 };
 
+/// Simple 2D bounding box
+struct bbox_2d
+{
+    point_2d min;
+    point_2d max;
+};
+
 /// Simple 3D coordinate (extending 2D)
 struct point_3d : public point_2d
 {

@@ -1,5 +1,6 @@
 add_definitions(-DCGAL_USE_BASIC_VIEWER)
 add_library(enctri
+  triangle_face.cpp
   triangulator.cpp
   enc_triangulator.cpp
   )
