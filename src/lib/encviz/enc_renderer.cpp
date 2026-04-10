@@ -48,9 +48,9 @@ enc_renderer::enc_renderer(const char *config_path)
     }
     else
     {
-        // Default to ~/.encviz
+        // Default to ~/.enctools
         fs::path default_path = getenv("HOME");
-        default_path.append(".encviz");
+        default_path.append(".enctools");
         load_config(default_path);
     }
 }
@@ -115,7 +115,7 @@ bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
     cairo_surface_t *surface =
         cairo_image_surface_create(CAIRO_FORMAT_ARGB32, tile_size_, tile_size_);
     cairo_t *cr = cairo_create(surface);
-                                                          
+
     // Flood background w/ white 0xffffff
     if (style.background.has_value())
     {
@@ -256,7 +256,7 @@ void enc_renderer::render_depth(cairo_t *cr, const OGRPoint *geo,
     cairo_select_font_face(cr, "monospace",
                            CAIRO_FONT_SLANT_NORMAL,
                            CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(cr, 15);
+    cairo_set_font_size(cr, 8);
     cairo_move_to(cr, c.x - extents.width/2, c.y - extents.height/2);
     cairo_show_text(cr, text);
 }
@@ -396,7 +396,7 @@ void enc_renderer::load_config(const fs::path &config_path)
 {
     printf("Using config directory: %s ...\n", config_path.string().c_str());
 
-    // Load XML document 
+    // Load XML document
     fs::path config_file = config_path / "config.xml";
     printf(" - Reading %s ...\n", config_file.string().c_str());
     tinyxml2::XMLDocument doc;
@@ -410,6 +410,9 @@ void enc_renderer::load_config(const fs::path &config_path)
     tinyxml2::XMLElement *root = doc.RootElement();
     fs::path chart_path = xml_text(xml_query(root, "chart_path"));
     fs::path meta_path = xml_text(xml_query(root, "meta_path"));
+    std::string land_enabled = xml_text(xml_query(root, "land_enabled"));
+    std::string land_path = xml_text(xml_query(root, "land_path"));
+    std::string land_layer = xml_text(xml_query(root, "land_layer"));
     fs::path style_path = xml_text(xml_query(root, "style_path"));
     tile_size_ = atoi(xml_text(xml_query(root, "tile_size")));
     min_scale0_ = atof(xml_text(xml_query(root, "scale_base")));
@@ -428,9 +431,15 @@ void enc_renderer::load_config(const fs::path &config_path)
     printf(" - Tile Size: %d\n", tile_size_);
     printf(" - Scale Base: %g\n", min_scale0_);
 
-    // Load charts
+    // Configure charts
     enc_.set_cache_path(meta_path);
     enc_.load_charts(chart_path);
+
+    // Configure default land layer
+    if (land_enabled == "true")
+    {
+        enc_.set_default_land(land_path, land_layer);
+    }
 
     // Load styles
     for (const fs::directory_entry &entry : fs::directory_iterator(style_path))

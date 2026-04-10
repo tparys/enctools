@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<encviz xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<enctools xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="config.xsd">
 
   <!-- Location of ENC charts -->
@@ -8,6 +8,15 @@
   <!-- Location to store ENC metadata -->
   <meta_path>meta</meta_path>
 
+  <!-- Enable or disable default land coverage -->
+  <land_enabled>false</land_enabled>
+
+  <!-- Land coverage file -->
+  <land_path>path/to/GSHHS_l_L1.shp</land_path>
+
+  <!-- Land coverage layer -->
+  <land_layer>GSHHS_l_L1</land_layer>
+
   <!-- Location to store render styles -->
   <style_path>styles</style_path>
 
@@ -15,6 +24,6 @@
   <tile_size>256</tile_size>
 
   <!-- Minimum presentation scale at tile zoom level 0 -->
-  <scale_base>1e8</scale_base>
+  <scale_base>5e8</scale_base>
 
-</encviz>
+</enctools>

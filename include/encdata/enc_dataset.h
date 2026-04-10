@@ -49,6 +49,15 @@ public:
     void set_cache_path(const std::filesystem::path &cache_path);
 
     /**
+     * Set Default Land Coverage
+     *
+     * \param[in] file_name Path to land coverage file
+     * \param[in] layer_name Path to land coverage layer
+     */
+    void set_default_land(const std::string &file_name,
+                          const std::string &layer_name);
+
+    /**
      * Clear Chart Index
      */
     void clear();
@@ -180,6 +189,12 @@ private:
 
     /// GDAL memory driver handle
     GDALDriver *mem_drv_;
+
+    /// Default land coverage file name
+    std::string land_file_name_;
+
+    /// Default land coverage layer name
+    std::string land_layer_name_;
 };
 
 }; // ~namespace encviz

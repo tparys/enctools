@@ -30,7 +30,7 @@ enc_dataset::enc_dataset()
     if (phome != nullptr)
     {
         cache_ = phome;
-        cache_ += "/.encviz";
+        cache_ += "/.enctools/meta";
     }
 
     // Get GDAL driver
@@ -46,6 +46,19 @@ enc_dataset::enc_dataset()
 void enc_dataset::set_cache_path(const std::filesystem::path &cache_path)
 {
     cache_ = cache_path;
+}
+
+/**
+ * Set Default Land Coverage
+ *
+ * \param[in] file_name Path to land coverage file
+ * \param[in] layer_name Path to land coverage layer
+ */
+void enc_dataset::set_default_land(const std::string &file_name,
+                                   const std::string &layer_name)
+{
+    land_file_name_ = file_name;
+    land_layer_name_ = layer_name;
 }
 
 /**
@@ -146,7 +159,7 @@ bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &
             selected.push_back(&chart);
         }
     }
-    if (selected.empty())
+    if (selected.empty() && land_file_name_.empty())
     {
         return false;
     }
@@ -209,7 +222,7 @@ bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &
                 // contours. If not present, just skip and move on
                 continue;
             }
-            
+
             // Copy over features
             if (ilayer->Clip(clip_layer, olayer) != OGRERR_NONE)
             {
@@ -236,6 +249,30 @@ bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &
             printf(" - Complete coverage (STOP)\n");
             break;
         }
+    }
+
+    // If there's still missing coverage, attempt to use background land mass
+    // to fill in any holes in LNDARE layer
+    if ((!land_file_name_.empty()) && (clip_layer->GetFeatureCount() != 0))
+    {
+        // Open input data set
+        GDALDataset *ids = GDALDataset::Open(land_file_name_.c_str(),
+                                             GDAL_OF_VECTOR | GDAL_OF_READONLY,
+                                             nullptr, nullptr, nullptr);
+        CHECKNULL(ids, "Cannot open input data set");
+        OGRLayer *ilayer = ids->GetLayerByName(land_layer_name_.c_str());
+        CHECKNULL(ilayer, "Cannot get BG input layer");
+
+        // Copy features
+        OGRLayer *olayer = ods->GetLayerByName("LNDARE");
+        if (ilayer->Clip(clip_layer, olayer) != OGRERR_NONE)
+        {
+            delete ids;
+            return false;
+        }
+
+        // Cleanup
+        delete ids;
     }
 
     return true;

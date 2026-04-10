@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-  <xs:element name="encviz">
+  <xs:element name="enctools">
     <xs:complexType>
       <xs:sequence>
 
         <xs:element name="chart_path" type="xs:string"/>
         <xs:element name="meta_path" type="xs:string"/>
+        <xs:element name="land_enabled" type="xs:boolean"/>
+        <xs:element name="land_path" type="xs:string"/>
+        <xs:element name="land_layer" type="xs:string"/>
         <xs:element name="style_path" type="xs:string"/>
         <xs:element name="tile_size" type="xs:integer"/>
         <xs:element name="scale_base" type="xs:float"/>
