@@ -31,7 +31,8 @@ void usage(int exit_code)
            "\n"
            "Options:\n"
            "  -h         - Show help\n"
-           "  -c <path>  - Set config directory (default=~/.config)\n");
+           "  -c <path>  - Set config directory (default=~/.config)\n"
+           "  -s         - Single threaded operation\n");
     exit(exit_code);
 }
 
@@ -100,11 +101,11 @@ MHD_Result request_handler(void *cls, struct MHD_Connection *connection,
 
 int main(int argc, char **argv)
 {
-    int opt;
+    int opt, mhd_mode = MHD_USE_THREAD_PER_CONNECTION;
     const char *config_path = nullptr;
 
     // Parse args
-    while ((opt = getopt(argc, argv, "hc:")) != -1)
+    while ((opt = getopt(argc, argv, "hc:s")) != -1)
     {
         switch (opt)
         {
@@ -116,6 +117,10 @@ int main(int argc, char **argv)
             case 'c':
                 // Set config path
                 config_path = optarg;
+                break;
+
+            case 's':
+                mhd_mode = MHD_USE_INTERNAL_POLLING_THREAD;
                 break;
 
             default:
@@ -132,9 +137,9 @@ int main(int argc, char **argv)
     encviz::enc_renderer enc_rend(config_path);
 
     // Start MHD
-    MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | MHD_USE_THREAD_PER_CONNECTION,
-					  PORT, NULL, NULL,
-					  &request_handler, &enc_rend, MHD_OPTION_END);
+    MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | mhd_mode,
+                                          PORT, NULL, NULL,
+                                          &request_handler, &enc_rend, MHD_OPTION_END);
     if (daemon == nullptr)
     {
 	return 1;

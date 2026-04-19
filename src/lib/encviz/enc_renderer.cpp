@@ -247,16 +247,18 @@ void enc_renderer::render_depth(cairo_t *cr, const OGRPoint *geo,
     char text[64] = {};
     snprintf(text, sizeof(text)-1, "%.1f", geo->getZ());
 
+    // Select font
+    set_color(cr, style.line_color);
+    cairo_select_font_face(cr, "monospace",
+                           CAIRO_FONT_SLANT_NORMAL,
+                           CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(cr, 12);
+
     // Determine text render size
     cairo_text_extents_t extents = {};
     cairo_text_extents(cr, text, &extents);
 
     // Draw text
-    set_color(cr, style.line_color);
-    cairo_select_font_face(cr, "monospace",
-                           CAIRO_FONT_SLANT_NORMAL,
-                           CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(cr, 8);
     cairo_move_to(cr, c.x - extents.width/2, c.y - extents.height/2);
     cairo_show_text(cr, text);
 }

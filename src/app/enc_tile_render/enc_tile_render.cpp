@@ -26,6 +26,7 @@ void usage(int exit_code)
            "  -c <path>  - Set config directory (default=~/.config)\n"
            "  -o <file>  - Set output file (default=out.png)\n"
            "  -s <name>  - Set render style (default=default)\n"
+           "  -w         - Use WTMS coordinate system (default=XYZ)\n"
            "\n"
            "Where:\n"
            "  X          - Horizontal tile coordinate\n"
@@ -43,7 +44,7 @@ int main(int argc, char **argv)
     const char *style_name = "default";
 
     // Parse args
-    while ((opt = getopt(argc, argv, "hc:o:s:")) != -1)
+    while ((opt = getopt(argc, argv, "hc:o:s:w")) != -1)
     {
         switch (opt)
         {
@@ -65,6 +66,10 @@ int main(int argc, char **argv)
             case 's':
                 // Set min display scale
                 style_name = optarg;
+                break;
+
+            case 'w':
+                tc = encviz::tile_coords::WTMS;
                 break;
 
             default:
