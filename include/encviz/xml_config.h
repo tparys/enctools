@@ -37,9 +37,10 @@ std::vector<tinyxml2::XMLElement*> xml_query_all(tinyxml2::XMLElement *root,
  *
  * \param[in] root XML root node
  * \param[in] name XML tag name
- * \return Returned node
+ * \param[in] optional Throw if not present
+ * \return Returned node or nullptr
  */
 tinyxml2::XMLElement *xml_query(tinyxml2::XMLElement *root,
-                                const char *name);
+                                const char *name, bool optional = false);
 
 }; // ~namespace encviz

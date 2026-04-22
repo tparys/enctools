@@ -58,16 +58,24 @@ std::vector<tinyxml2::XMLElement*> xml_query_all(tinyxml2::XMLElement *root,
  *
  * \param[in] root XML root node
  * \param[in] name XML tag name
- * \return Returned node
+ * \param[in] optional Throw if not present
+ * \return Returned node or nullptr
  */
 tinyxml2::XMLElement *xml_query(tinyxml2::XMLElement *root,
-                                const char *name)
+                                const char *name, bool optional)
 {
     std::vector<tinyxml2::XMLElement*> nodes = xml_query_all(root, name);
 
     if (nodes.empty())
     {
-        throw std::runtime_error("Tag " + std::string(name) + " not found");
+        if (optional)
+        {
+            return nullptr;
+        }
+        else
+        {
+            throw std::runtime_error("Tag " + std::string(name) + " not found");
+        }
     }
     else if (nodes.size() > 1)
     {

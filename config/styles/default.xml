@@ -3,69 +3,118 @@
        xsi:noNamespaceSchemaLocation="style.xsd">
 
   <!-- White Background -->
-  <background>fff</background>
+  <background>d3e9ed</background>
 
   <!-- Land Areas -->
   <layer>
-    <layer_name>LNDARE</layer_name>
-    <fill_color>C8B87A</fill_color>
-    <line_color>A8ACA1</line_color>
-    <line_width>1</line_width>
-    <marker_size>5</marker_size>
+    <name>LNDARE</name>
+    <style>
+      <fill_color>C8B87A</fill_color>
+      <line_color>A8ACA1</line_color>
+      <line_width>1</line_width>
+      <marker_size>5</marker_size>
+    </style>
+  </layer>
+
+  <!-- Depth Areas -->
+  <layer>
+    <name>DEPARE</name>
+    <style>
+      <fill_color>d3e9ed</fill_color>
+      <line_color>888</line_color>
+      <line_width>1</line_width>
+      <marker_size>0</marker_size>
+    </style>
+    <cutoff_attr>DRVAL1</cutoff_attr>
+    <cutoff>
+      <value>0</value>
+      <style>
+        <fill_color>82b194</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>2</value>
+      <style>
+        <fill_color>73b5ee</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>5</value>
+      <style>
+        <fill_color>97c4f1</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>10</value>
+      <style>
+        <fill_color>b9d4e0</fill_color>
+      </style>
+    </cutoff>
   </layer>
 
   <!-- Shoreline Construction -->
   <layer>
-    <layer_name>SLCONS</layer_name>
-    <fill_color>000</fill_color>
-    <line_color>989C92</line_color>
-    <line_width>1</line_width>
-    <marker_size>5</marker_size>
+    <name>SLCONS</name>
+    <style>
+      <fill_color>000</fill_color>
+      <line_color>989C92</line_color>
+      <line_width>1</line_width>
+      <marker_size>5</marker_size>
+    </style>
   </layer>
 
   <!-- Depth Contours -->
   <layer>
-    <layer_name>DEPCNT</layer_name>
-    <fill_color>000</fill_color>
-    <line_color>B2CBD6</line_color>
-    <line_width>1</line_width>
-    <marker_size>0</marker_size>
+    <name>DEPCNT</name>
+    <style>
+      <fill_color>000</fill_color>
+      <line_color>888</line_color>
+      <line_width>1</line_width>
+      <marker_size>0</marker_size>
+    </style>
   </layer>
 
   <!-- Obstructions -->
   <layer>
-    <layer_name>OBSTRN</layer_name>
-    <fill_color>f88</fill_color>
-    <line_color>f88</line_color>
-    <line_width>1</line_width>
-    <marker_size>5</marker_size>
+    <name>OBSTRN</name>
+    <style>
+      <fill_color>f88</fill_color>
+      <line_color>f88</line_color>
+      <line_width>1</line_width>
+      <marker_size>5</marker_size>
+    </style>
   </layer>
 
   <!-- Depth Soundings -->
   <layer>
-    <layer_name>SOUNDG</layer_name>
-    <fill_color>000</fill_color>
-    <line_color>000</line_color>
-    <line_width>0</line_width>
-    <marker_size>0</marker_size>
+    <name>SOUNDG</name>
+    <style>
+      <text_color>444</text_color>
+      <text_font>monospace</text_font>
+      <text_size>12</text_size>
+    </style>
   </layer>
 
   <!-- Bouys (Lateral) -->
   <layer>
-    <layer_name>BOYLAT</layer_name>
-    <fill_color>0f0</fill_color>
-    <line_color>0f0</line_color>
-    <line_width>0</line_width>
-    <marker_size>5</marker_size>
+    <name>BOYLAT</name>
+    <style>
+      <fill_color>ffa500</fill_color>
+      <line_color>ffa500</line_color>
+      <line_width>0</line_width>
+      <marker_size>5</marker_size>
+    </style>
   </layer>
 
   <!-- Wrecks -->
   <layer>
-    <layer_name>WRECKS</layer_name>
-    <fill_color>f00</fill_color>
-    <line_color>f00</line_color>
-    <line_width>0</line_width>
-    <marker_size>5</marker_size>
+    <name>WRECKS</name>
+    <style>
+      <fill_color>f00</fill_color>
+      <line_color>f00</line_color>
+      <line_width>0</line_width>
+      <marker_size>5</marker_size>
+    </style>
   </layer>
 
 </style>

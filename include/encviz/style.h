@@ -32,12 +32,9 @@ struct color
     uint8_t green{0};
 };
 
-/// Style for a single layer
-struct layer_style
+/// Simple style
+struct simple_style
 {
-    /// Name of layer
-    std::string layer_name;
-
     /// Fill color
     color fill_color;
 
@@ -50,8 +47,33 @@ struct layer_style
     /// Circular marker radius
     int marker_size;
 
-    /// Text render attribute
-    std::string attr_name;
+    /// Text color
+    color text_color;
+
+    /// Text font
+    std::string text_font{"monospace"};
+
+    /// Text size
+    int text_size{12};
+};
+
+/// Style for a single layer
+struct layer_style
+{
+    /// Name of layer
+    std::string layer_name;
+
+    /// Default render style
+    simple_style style;
+
+    /// Attribute used for cutoffs
+    std::string cutoff_attr;
+
+    /// Other styles
+    std::vector<simple_style> cutoff_styles;
+
+    /// Attribute cutoffs for those styles
+    std::vector<double> cutoff_values;
 };
 
 /// Full rendering style
@@ -73,10 +95,10 @@ struct render_style
  *  - 8 bit RGB  : "ff00ff"
  *  - 8 bit ARGB : "ffff00ff"
  *
- * \param[in] node Color code element
+ * \param[in] code Color code text
  * \return Parsed color code
  */
-color parse_color(tinyxml2::XMLElement *node);
+color parse_color(const char *code);
 
 /**
  * Parse Layer Style
@@ -84,7 +106,25 @@ color parse_color(tinyxml2::XMLElement *node);
  * \param[in] node Layer element
  * \return Parsed layer style
  */
-layer_style parse_layer(tinyxml2::XMLElement *node);
+layer_style parse_layer_style(tinyxml2::XMLElement *node);
+
+/**
+ * Parse Simple Style
+ *
+ * \param[in] node Layer element
+ * \return Parsed layer style
+ */
+simple_style parse_simple_style(tinyxml2::XMLElement *node);
+
+/**
+ * Parse Simple Style with default
+ *
+ * \param[in] node Layer element
+ * \param[in] defaults Default style
+ * \return Parsed layer style
+ */
+simple_style parse_simple_style(tinyxml2::XMLElement *node,
+                                const simple_style &defaults);
 
 /**
  * Load Style from File

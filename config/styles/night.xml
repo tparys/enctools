@@ -7,38 +7,46 @@
 
   <!-- Land Areas -->
   <layer>
-    <layer_name>LNDARE</layer_name>
-    <fill_color>0D0A08</fill_color>
-    <line_color>0E0F15</line_color>
-    <line_width>1</line_width>
-    <marker_size>5</marker_size>
+    <name>LNDARE</name>
+    <style>
+      <fill_color>0D0A08</fill_color>
+      <line_color>0E0F15</line_color>
+      <line_width>1</line_width>
+      <marker_size>5</marker_size>
+    </style>
   </layer>
 
   <!-- Shoreline Construction -->
   <layer>
-    <layer_name>SLCONS</layer_name>
-    <fill_color>000</fill_color>
-    <line_color>141616</line_color>
-    <line_width>1</line_width>
-    <marker_size>5</marker_size>
+    <name>SLCONS</name>
+    <style>
+      <fill_color>000</fill_color>
+      <line_color>141616</line_color>
+      <line_width>1</line_width>
+      <marker_size>5</marker_size>
+    </style>
   </layer>
 
   <!-- Depth Contours -->
   <layer>
-    <layer_name>DEPCNT</layer_name>
-    <fill_color>000</fill_color>
-    <line_color>0C0D0E</line_color>
-    <line_width>1</line_width>
-    <marker_size>0</marker_size>
+    <name>DEPCNT</name>
+    <style>
+      <fill_color>000</fill_color>
+      <line_color>0C0D0E</line_color>
+      <line_width>1</line_width>
+      <marker_size>0</marker_size>
+    </style>
   </layer>
 
   <!-- Depth Soundings -->
   <layer>
-    <layer_name>SOUNDG</layer_name>
-    <fill_color>000</fill_color>
-    <line_color>000</line_color>
-    <line_width>0</line_width>
-    <marker_size>0</marker_size>
+    <name>SOUNDG</name>
+    <style>
+      <fill_color>000</fill_color>
+      <line_color>000</line_color>
+      <line_width>0</line_width>
+      <marker_size>0</marker_size>
+    </style>
   </layer>
 
 </style>

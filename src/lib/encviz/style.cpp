@@ -26,13 +26,11 @@ namespace encviz
  *  - 8 bit RGB  : "ff00ff"
  *  - 8 bit ARGB : "ffff00ff"
  *
- * \param[in] node Color code element
+ * \param[in] text Color code text
  * \return Parsed color code
  */
-color parse_color(tinyxml2::XMLElement *node)
+color parse_color(const char *code)
 {
-    // Compute length of color code
-    const char *code = xml_text(node);
     int len = strlen(code);
 
     // Ensure this parses correctly as a hex code
@@ -93,7 +91,7 @@ color parse_color(tinyxml2::XMLElement *node)
  * \param[in] node Layer element
  * \return Parsed layer style
  */
-layer_style parse_layer(tinyxml2::XMLElement *node)
+layer_style parse_layer_style(tinyxml2::XMLElement *node)
 {
     // Sanity check
     if (node == nullptr)
@@ -101,13 +99,99 @@ layer_style parse_layer(tinyxml2::XMLElement *node)
         throw std::runtime_error("Layer style may not be null");
     }
 
-    // Parse layer XML
+    // Required XML style bits
     layer_style parsed;
-    parsed.layer_name = xml_text(xml_query(node, "layer_name"));
-    parsed.fill_color = parse_color(xml_query(node, "fill_color"));
-    parsed.line_color = parse_color(xml_query(node, "line_color"));
-    parsed.line_width = atoi(xml_text(xml_query(node, "line_width")));
-    parsed.marker_size = atoi(xml_text(xml_query(node, "marker_size")));
+    parsed.layer_name = xml_text(xml_query(node, "name"));
+    tinyxml2::XMLElement *child;
+    child = xml_query(node, "style");
+    parsed.style = parse_simple_style(child);
+
+    // Optional attribute based cutoffs
+    child = xml_query(node, "cutoff_attr", true);
+    if (child)
+    {
+        parsed.cutoff_attr = xml_text(child);
+        for (auto style_node : xml_query_all(node, "cutoff"))
+        {
+            child = xml_query(style_node, "value");
+            parsed.cutoff_values.push_back(atof(xml_text(child)));
+            child = xml_query(style_node, "style");
+            parsed.cutoff_styles.push_back(parse_simple_style(child, parsed.style));
+        }
+    }
+    
+    return parsed;
+}
+
+/**
+ * Parse Simple Style
+ *
+ * \param[in] node Layer element
+ * \return Parsed layer style
+ */
+simple_style parse_simple_style(tinyxml2::XMLElement *node)
+{
+    simple_style defaults;
+    return parse_simple_style(node, defaults);
+}
+
+/**
+ * Parse Simple Style with default
+ *
+ * \param[in] node Layer element
+ * \param[in] defaults Default style
+ * \return Parsed layer style
+ */
+simple_style parse_simple_style(tinyxml2::XMLElement *node,
+                                const simple_style &defaults)
+{
+    // Sanity check
+    if (node == nullptr)
+    {
+        throw std::runtime_error("Layer style may not be null");
+    }
+
+    // Start from specified defaults
+    simple_style parsed = defaults;
+
+    // Load any specified elements
+    tinyxml2::XMLElement *child;
+    child = xml_query(node, "fill_color", true);
+    if (child)
+    {
+        parsed.fill_color = parse_color(xml_text(child));
+    }
+    child = xml_query(node, "line_color", true);
+    if (child)
+    {
+        parsed.line_color = parse_color(xml_text(child));
+    }
+    child = xml_query(node, "line_width", true);
+    if (child)
+    {
+        parsed.line_width = atoi(xml_text(child));
+    }
+    child = xml_query(node, "marker_size", true);
+    if (child)
+    {
+        parsed.marker_size = atoi(xml_text(child));
+    }
+    child = xml_query(node, "text_color", true);
+    if (child)
+    {
+        parsed.text_color = parse_color(xml_text(child));
+    }
+    child = xml_query(node, "text_font", true);
+    if (child)
+    {
+        parsed.text_font = xml_text(child);
+    }
+    child = xml_query(node, "text_size", true);
+    if (child)
+    {
+        parsed.text_size = atoi(xml_text(child));
+    }
+    
     return parsed;
 }
 
@@ -132,12 +216,12 @@ render_style load_style(const std::string &filename)
     render_style parsed;
     try
     {
-        parsed.background = parse_color(xml_query(root, "background"));
+        parsed.background = parse_color(xml_text(xml_query(root, "background")));
     }
     catch (...) {}
     for (tinyxml2::XMLElement *child : xml_query_all(root, "layer"))
     {
-        parsed.layers.push_back(parse_layer(child));
+        parsed.layers.push_back(parse_layer_style(child));
     }
     
     return parsed;

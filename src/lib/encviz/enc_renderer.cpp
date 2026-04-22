@@ -131,7 +131,8 @@ bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
         for (const auto &feat : tile_layer)
         {
             OGRGeometry *geo = feat->GetGeometryRef();
-            render_geo(cr, geo, wm, lstyle);
+            const simple_style &geo_style = get_feat_style(feat, lstyle);
+            render_geo(cr, geo, wm, geo_style);
         }
     }
 
@@ -164,7 +165,7 @@ bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
  * \param[in] style Feature style
  */
 void enc_renderer::render_geo(cairo_t *cr, const OGRGeometry *geo,
-                              const web_mercator &wm, const layer_style &style)
+                              const web_mercator &wm, const simple_style &style)
 {
     // What sort of geometry were we passed?
     OGRwkbGeometryType gtype = geo->getGeometryType();
@@ -238,7 +239,7 @@ void enc_renderer::render_geo(cairo_t *cr, const OGRGeometry *geo,
  * \param[in] style Feature style
  */
 void enc_renderer::render_depth(cairo_t *cr, const OGRPoint *geo,
-                                const web_mercator &wm, const layer_style &style)
+                                const web_mercator &wm, const simple_style &style)
 {
     // Convert lat/lon to pixel coordinates
     coord c = wm.point_to_pixels(*geo);
@@ -248,7 +249,7 @@ void enc_renderer::render_depth(cairo_t *cr, const OGRPoint *geo,
     snprintf(text, sizeof(text)-1, "%.1f", geo->getZ());
 
     // Select font
-    set_color(cr, style.line_color);
+    set_color(cr, style.text_color);
     cairo_select_font_face(cr, "monospace",
                            CAIRO_FONT_SLANT_NORMAL,
                            CAIRO_FONT_WEIGHT_NORMAL);
@@ -272,7 +273,7 @@ void enc_renderer::render_depth(cairo_t *cr, const OGRPoint *geo,
  * \param[in] style Feature style
  */
 void enc_renderer::render_point(cairo_t *cr, const OGRPoint *geo,
-                                const web_mercator &wm, const layer_style &style)
+                                const web_mercator &wm, const simple_style &style)
 {
     // Skip render if not appropriate
     if (style.marker_size == 0)
@@ -303,7 +304,7 @@ void enc_renderer::render_point(cairo_t *cr, const OGRPoint *geo,
  * \param[in] style Feature style
  */
 void enc_renderer::render_line(cairo_t *cr, const OGRLineString *geo,
-                               const web_mercator &wm, const layer_style &style)
+                               const web_mercator &wm, const simple_style &style)
 {
     // Pass OGR points to cairo
     bool first = true;
@@ -339,7 +340,7 @@ void enc_renderer::render_line(cairo_t *cr, const OGRLineString *geo,
  * \param[in] style Feature style
  */
 void enc_renderer::render_poly(cairo_t *cr, const OGRPolygon *geo,
-                               const web_mercator &wm, const layer_style &style)
+                               const web_mercator &wm, const simple_style &style)
 {
     // FIXME - Throw a fit if we see interior rings (not handled)
     if (geo->getNumInteriorRings() != 0)
@@ -372,6 +373,39 @@ void enc_renderer::render_poly(cairo_t *cr, const OGRPolygon *geo,
     set_color(cr, style.line_color);
     cairo_set_line_width(cr, style.line_width);
     cairo_stroke(cr);
+}
+
+/**
+ * Choose Feature Style
+ *
+ * \param[in] feat Specified feature
+ * \param[in] lstyle Layer styles
+ * \return Selected style
+ */
+const simple_style &enc_renderer::get_feat_style(const OGRFeatureUniquePtr &feat,
+                                                 const layer_style &lstyle)
+{
+    // Check for alternate feature styles
+    if (!lstyle.cutoff_styles.empty())
+    {
+        // Get field index
+        int idx = feat->GetFieldIndex(lstyle.cutoff_attr.c_str());
+
+        // Get field value
+        double field_value = (*feat)[idx].GetDouble();
+
+        // If it's less than one of the cutoffs, use the corresponding style
+        for (size_t i = 0; i < lstyle.cutoff_styles.size(); i++)
+        {
+            if (field_value < lstyle.cutoff_values[i])
+            {
+                return lstyle.cutoff_styles[i];
+            }
+        }
+    }
+
+    // Use default style if nothing more appropriate
+    return lstyle.style;
 }
 
 /**

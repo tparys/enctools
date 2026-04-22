@@ -8,14 +8,34 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <!-- Simple Style -->
+  <xs:complexType name="simple_style">
+    <xs:sequence>
+      <xs:element name="fill_color" type="color_code" minOccurs="0"/>
+      <xs:element name="line_color" type="color_code" minOccurs="0"/>
+      <xs:element name="line_width" type="xs:integer" minOccurs="0"/>
+      <xs:element name="marker_size" type="xs:integer" minOccurs="0"/>
+      <xs:element name="text_color" type="color_code" minOccurs="0"/>
+      <xs:element name="text_font" type="xs:string" minOccurs="0"/>
+      <xs:element name="text_size" type="xs:integer" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Cutoff Style -->
+  <xs:complexType name="cutoff_style">
+    <xs:sequence>
+      <xs:element name="value" type="xs:integer"/>
+      <xs:element name="style" type="simple_style"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <!-- Simple Layer Styling -->
   <xs:complexType name="layer_style">
     <xs:sequence>
-      <xs:element name="layer_name" type="xs:string"/>
-      <xs:element name="fill_color" type="color_code"/>
-      <xs:element name="line_color" type="color_code"/>
-      <xs:element name="line_width" type="xs:integer"/>
-      <xs:element name="marker_size" type="xs:integer"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="style" type="simple_style"/>
+      <xs:element name="cutoff_attr" type="xs:string"/>
+      <xs:element name="cutoff" type="cutoff_style" minOccurs="0" maxOccurs="unlimited"/>
     </xs:sequence>
   </xs:complexType>
 

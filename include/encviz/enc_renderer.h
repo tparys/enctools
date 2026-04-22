@@ -54,7 +54,7 @@ private:
      * \param[in] style Feature style
      */
     void render_geo(cairo_t *cr, const OGRGeometry *geo,
-                    const web_mercator &wm, const layer_style &style);
+                    const web_mercator &wm, const simple_style &style);
 
     /**
      * Render Depth Value
@@ -65,7 +65,7 @@ private:
      * \param[in] style Feature style
      */
     void render_depth(cairo_t *cr, const OGRPoint *geo,
-                      const web_mercator &wm, const layer_style &style);
+                      const web_mercator &wm, const simple_style &style);
 
     /**
      * Render Point Geometry
@@ -76,7 +76,7 @@ private:
      * \param[in] style Feature style
      */
     void render_point(cairo_t *cr, const OGRPoint *geo,
-                      const web_mercator &wm, const layer_style &style);
+                      const web_mercator &wm, const simple_style &style);
 
     /**
      * Render LineString Geometry
@@ -87,7 +87,7 @@ private:
      * \param[in] style Feature style
      */
     void render_line(cairo_t *cr, const OGRLineString *geo,
-                     const web_mercator &wm, const layer_style &style);
+                     const web_mercator &wm, const simple_style &style);
 
     /**
      * Render Polygon Geometry
@@ -98,7 +98,17 @@ private:
      * \param[in] style Feature style
      */
     void render_poly(cairo_t *cr, const OGRPolygon *geo,
-                     const web_mercator &wm, const layer_style &style);
+                     const web_mercator &wm, const simple_style &style);
+
+    /**
+     * Choose Feature Style
+     *
+     * \param[in] feat Specified feature
+     * \param[in] lstyle Layer styles
+     * \return Selected style
+     */
+    const simple_style &get_feat_style(const OGRFeatureUniquePtr &feat,
+                                       const layer_style &lstyle);
 
     /**
      * Set Render Color
