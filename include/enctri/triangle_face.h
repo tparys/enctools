@@ -63,9 +63,9 @@ private:
      * \param[in] p2 third point
      * \return Postive if on one side, negative otherwise
      */
-    double sign(const encdata::point_2d &p1,
-                const encdata::point_2d &p2,
-                const encdata::point_2d &p3) const;
+    static double sign(const encdata::point_2d &p1,
+                       const encdata::point_2d &p2,
+                       const encdata::point_2d &p3);
 
     /// 2D vertices
     std::array<encdata::point_2d, 3> v_;

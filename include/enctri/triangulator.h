@@ -28,11 +28,29 @@ public:
     void draw();
 
     /**
-     * Get triangulation
+     * Get triangulation mesh
      *
      * \return Internal triangulation
      */
-    mesh get();
+    mesh get_mesh();
+
+    /**
+     * Get triangulation coverage
+     *
+     * \return Coverage as OGR Envelope
+     */
+    encdata::bbox_2d get_coverage() const;
+
+    /**
+     * Rasterize to 2D grid
+     *
+     * \param[out] grid Output raster
+     * \param[in] bbox Grid coverage
+     * \param[in] res Grid resolution
+     * \param[in] nodata Null value for marking no valid data
+     */
+    void rasterize(raster &grid, encdata::bbox_2d const &bbox,
+                   double res, float nodata);
 
     /**
      * Insert single 3D point

@@ -128,7 +128,7 @@ double triangle_face::height(const encdata::point_2d &p) const
  */
 double triangle_face::sign(const encdata::point_2d &p1,
                            const encdata::point_2d &p2,
-                           const encdata::point_2d &p3) const
+                           const encdata::point_2d &p3)
 {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }

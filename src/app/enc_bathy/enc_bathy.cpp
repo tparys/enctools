@@ -26,10 +26,42 @@ int main(int argc, char **argv)
 
     // Create a triangulator object
     enctri::enc_triangulator tri(ds);
-    tri.draw();
+    //tri.draw();
+    delete ds;
 
+    auto bbox = tri.get_coverage();
+    enctri::raster grid;
+    double res = 1e-3;
+    float nodata = -9999;
+    tri.rasterize(grid, bbox, res, nodata);
+
+    // Output grid
+    FILE *handle = fopen("output.asc", "w");
+    if (handle == nullptr)
+    {
+        perror("Cannot open output file");
+        return 1;
+    }
+    fprintf(handle, "ncols %lu\n", grid.size_x);
+    fprintf(handle, "nrows %lu\n", grid.size_y);
+    fprintf(handle, "xllcorner %f\n", bbox.min.x);
+    fprintf(handle, "yllcorner %f\n", bbox.min.y);
+    fprintf(handle, "cellsize %g\n", res);
+    fprintf(handle, "NODATA_value %g\n", nodata);
+    for (size_t y = 0; y < grid.size_y; y++)
+    {
+        size_t yinv = grid.size_y - y - 1;
+        for (size_t x = 0; x < grid.size_x; x++)
+        {
+            fprintf(handle, "%g ", grid.data[(yinv * grid.size_x) + x]);
+        }
+        fprintf(handle, "\n");
+    }
+    fclose(handle);
+
+    /*
     // Get triangulation mesh
-    auto mesh = tri.get();
+    auto mesh = tri.get_mesh();
 
     // Show points
     printf("Points:\n");
@@ -41,13 +73,13 @@ int main(int argc, char **argv)
 
     // Show faces
     printf("Faces:\n");
-    for (size_t i = 0; i < mesh.points.size(); i++)
+    for (size_t i = 0; i < mesh.faces.size(); i++)
     {
         printf(" - %lu : %lu, %lu, %lu\n",
                i, mesh.faces[i][0], mesh.faces[i][1], mesh.faces[i][2]);
     }
+    */
 
     // Cleanup and exit
-    delete ds;
     return 0;
 }

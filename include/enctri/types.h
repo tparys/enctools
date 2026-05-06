@@ -16,4 +16,13 @@ struct mesh
     std::vector<face> faces;
 };
 
+// 2D raster map
+struct raster
+{
+    encdata::bbox_2d bbox;
+    size_t size_x;
+    size_t size_y;
+    std::vector<float> data;
+};
+
 }; // ~namespace enctri

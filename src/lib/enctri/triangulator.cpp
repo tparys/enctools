@@ -5,6 +5,7 @@
 #ifndef CGAL_NO_DRAW_CDT
   #include <CGAL/draw_constrained_triangulation_2.h>
 #endif
+#include <enctri/triangle_face.h>
 #include <enctri/triangulator.h>
 
 namespace enctri
@@ -76,12 +77,12 @@ void triangulator::draw()
 }
 
 /**
- * Get triangulation
+ * Get triangulation mesh
  *
  * \param[out] points 3D coordinates
  * \param[out] faces Vertex indeces
  */
-mesh triangulator::get()
+mesh triangulator::get_mesh()
 {
     mesh out;
 
@@ -112,6 +113,88 @@ mesh triangulator::get()
     }
 
     return out;
+}
+
+/**
+ * Get triangulation coverage
+ *
+ * \return Coverage as OGR Envelope
+ */
+encdata::bbox_2d triangulator::get_coverage() const
+{
+    encdata::bbox_2d bbox = {{INFINITY, INFINITY}, {-INFINITY, -INFINITY}};
+    for (const auto &vertex_handle : CDT->finite_vertex_handles())
+    {
+        // Next point
+        double x = vertex_handle->point().x();
+        double y = vertex_handle->point().y();
+
+        // Update bounds
+        bbox.min.x = std::min(bbox.min.x, x);
+        bbox.min.y = std::min(bbox.min.y, y);
+        bbox.max.x = std::max(bbox.max.x, x);
+        bbox.max.y = std::max(bbox.max.y, y);
+    }
+
+    return bbox;
+}
+
+/**
+ * Rasterize to 2D grid
+ *
+ * \param[out] data Grid data, row major
+ * \param[in] bbox Grid coverage
+ * \param[in] res Grid resolution
+ * \param[in] nodata Null value for marking no valid data
+ */
+void triangulator::rasterize(raster &grid, encdata::bbox_2d const &bbox,
+                             double res, float nodata)
+{
+    // Figure out how big dataset needs to be and initialize
+    grid.size_x = std::round((bbox.max.x - bbox.min.x) / res);
+    grid.size_y = std::round((bbox.max.y - bbox.min.y) / res);
+    grid.data.resize(grid.size_x * grid.size_y);
+    std::fill(grid.data.begin(), grid.data.end(), nodata);
+
+    // Collect triangulation as 2.5D mesh
+    mesh out = get_mesh();
+
+    // Rasterize triangles to 2D dataset
+    for (enctri::face const &face : out.faces)
+    {
+        // Convert triangle points from geo to local coordinates
+        std::array<encdata::point_3d, 3> points;
+        for (size_t i = 0; i < 3; i++)
+        {
+            encdata::point_3d const &point_geo = out.points[face[i]];
+            points[i].x = (point_geo.x - bbox.min.x) / res;
+            points[i].y = (point_geo.y - bbox.min.y) / res;
+            points[i].z = point_geo.z;
+        }
+
+        // Solve triangle face
+        triangle_face tri(points);
+        encdata::bbox_2d tri_bbox = tri.get_bbox();
+        int min_x = std::max((int)std::floor(tri_bbox.min.x), 0);
+        int min_y = std::max((int)std::floor(tri_bbox.min.y), 0);
+        int max_x = std::min((int)std::ceil(tri_bbox.max.x), (int)grid.size_x - 1);
+        int max_y = std::min((int)std::ceil(tri_bbox.max.y), (int)grid.size_y - 1);
+
+        // Raster triangle
+        for (int y = min_y; y <= max_y; y++)
+        {
+            for (int x = min_x; x <= max_x; x++)
+            {
+                encdata::point_2d p;
+                p.x = x;
+                p.y = y;
+                if (tri.contains(p))
+                {
+                    grid.data[(y * grid.size_x) + x] = (float)tri.height(p);
+                }
+            }
+        }
+    }
 }
 
 /// Insert single point
