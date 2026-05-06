@@ -35,7 +35,7 @@ endif()
 # Constrained Delaunay Triangulations (CDTs)
 try_compile(CGAL_HAS_DRAW_CDT
   ${CMAKE_BINARY_DIR}/compile_tests
-  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cgal_draw_triangulation.c)
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cgal_draw_triangulation.cpp)
 if (NOT CGAL_HAS_DRAW_CDT)
   add_compile_definitions(CGAL_NO_DRAW_CDT)
 endif()
