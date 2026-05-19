@@ -17,6 +17,59 @@ enc_triangulator::enc_triangulator(GDALDataset *ds)
 }
 
 /**
+ * Rasterize to GDAL Dataset
+ *
+ */
+void enc_triangulator::gdal_rasterize(std::string const &driver,
+                                      std::string const &filename,
+                                      double res, float nodata)
+{
+    // Rasterize to internal buffer
+    enctri::raster grid;
+    rasterize(grid, res, nodata);
+
+    // Get driver by name
+    GDALDriver *drv = GetGDALDriverManager()->GetDriverByName(driver.c_str());
+    if (drv == nullptr)
+    {
+        throw std::runtime_error("Invalid GDAL driver");
+    }
+
+    // Create output dataset
+    GDALDataset *ds = drv->Create(filename.c_str(), grid.size_x, grid.size_y,
+                                  1, GDT_Float32, nullptr);
+    if (ds == nullptr)
+    {
+        throw std::runtime_error("Cannot create output dataset");
+    }
+
+    // Set geo transform
+    double xform[6] = { grid.bbox.min.x, res, 0, grid.bbox.max.y, 0, -res };
+    ds->SetGeoTransform(xform);
+
+    // Get raster band
+    GDALRasterBand *band = ds->GetRasterBand(1);
+    band->SetNoDataValue(nodata);
+
+    // Write raster one row at a time
+    std::vector<float> row;
+    for (size_t y = 0; y < grid.size_y; y++)
+    {
+        size_t yinv = grid.size_y - y - 1;
+        size_t offset = (yinv * grid.size_x);
+        if (band->RasterIO(GF_Write, 0, y, grid.size_x, 1,
+                           grid.data.data() + offset,
+                           grid.size_x, 1, GDT_Float32, 0, 0))
+        {
+            throw std::runtime_error("Cannot write to output dataset");
+        }
+    }
+
+    // Cleanup
+    delete ds;
+}
+
+/**
  * Load Land Areas (LNDARE)
  */
 void enc_triangulator::load_land_areas()

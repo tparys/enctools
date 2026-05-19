@@ -7,5 +7,5 @@ add_library(enctri
 target_link_libraries(enctri
   ${GDAL_LIBRARIES}
   CGAL::CGAL
-  CGAL::CGAL_Qt5
+#  CGAL::CGAL_Qt5
   )

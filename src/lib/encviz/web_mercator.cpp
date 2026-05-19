@@ -28,14 +28,14 @@ web_mercator::web_mercator(std::size_t x, std::size_t y, std::size_t z,
     // Nominal planet radius
     double radius = 6378137;
 
-    // Nominal dimentions in meters of Web Mercator map at zoom level 0
+    // Nominal dimensions in meters of Web Mercator map at zoom level 0
     double tile_side = 2 * M_PI * radius;
 
     // Meter coordinates from bottom left, not center
     offset_m_ = tile_side / 2;
 
     // Number of tiles at this zoom level
-    std::size_t ntiles = (std::size_t)pow(2, z);
+    std::size_t ntiles = 1UL << z;
 
     // All our math expects XYZ tile coordinates,
     // will need to flip Y axis if using WTMS

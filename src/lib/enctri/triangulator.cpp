@@ -143,16 +143,15 @@ encdata::bbox_2d triangulator::get_coverage() const
  * Rasterize to 2D grid
  *
  * \param[out] data Grid data, row major
- * \param[in] bbox Grid coverage
  * \param[in] res Grid resolution
  * \param[in] nodata Null value for marking no valid data
  */
-void triangulator::rasterize(raster &grid, encdata::bbox_2d const &bbox,
-                             double res, float nodata)
+void triangulator::rasterize(raster &grid, double res, float nodata)
 {
     // Figure out how big dataset needs to be and initialize
-    grid.size_x = std::round((bbox.max.x - bbox.min.x) / res);
-    grid.size_y = std::round((bbox.max.y - bbox.min.y) / res);
+    grid.bbox = get_coverage();
+    grid.size_x = std::round((grid.bbox.max.x - grid.bbox.min.x) / res);
+    grid.size_y = std::round((grid.bbox.max.y - grid.bbox.min.y) / res);
     grid.data.resize(grid.size_x * grid.size_y);
     std::fill(grid.data.begin(), grid.data.end(), nodata);
 
@@ -167,8 +166,8 @@ void triangulator::rasterize(raster &grid, encdata::bbox_2d const &bbox,
         for (size_t i = 0; i < 3; i++)
         {
             encdata::point_3d const &point_geo = out.points[face[i]];
-            points[i].x = (point_geo.x - bbox.min.x) / res;
-            points[i].y = (point_geo.y - bbox.min.y) / res;
+            points[i].x = (point_geo.x - grid.bbox.min.x) / res;
+            points[i].y = (point_geo.y - grid.bbox.min.y) / res;
             points[i].z = point_geo.z;
         }
 

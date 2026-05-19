@@ -429,7 +429,7 @@ int enc_dataset::get_feat_field_int(OGRFeature *feat, const char *name)
     }
 
     // Check that the field is really an integer
-    OGRFieldDefn *defn = feat->GetFieldDefnRef(idx);
+    const OGRFieldDefn *defn = feat->GetFieldDefnRef(idx);
     CHECKNULL(defn, "Cannot get feature field definition");
     if (defn->GetType() != OGRFieldType::OFTInteger)
     {

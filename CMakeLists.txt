@@ -20,7 +20,7 @@ pkg_check_modules(GDAL REQUIRED gdal)
 pkg_check_modules(GTEST gtest_main gtest)
 pkg_check_modules(MICROHTTPD REQUIRED libmicrohttpd)
 pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
-find_package(CGAL REQUIRED COMPONENTS Qt5)
+find_package(CGAL REQUIRED) # REQUIRED COMPONENTS Qt5)
 
 # Earlier versions of microhttpd don't define MHD_Result,
 # and just use an int in it's place, so detect that ...

@@ -18,6 +18,18 @@ public:
      */
     enc_triangulator(GDALDataset *ds);
 
+    /**
+     * Rasterize to GDAL Dataset
+     *
+     * \param[in] driver GDAL driver name
+     * \param[in] filename Output file name
+     * \param[in] res X/Y resolution
+     * \param[in] nodata Sentinel value for no valid data
+     */
+    void gdal_rasterize(std::string const &driver,
+                        std::string const &filename,
+                        double res, float nodata);
+
 private:
 
     /**
