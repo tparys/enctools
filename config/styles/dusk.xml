@@ -16,6 +16,53 @@
     </style>
   </layer>
 
+  <!-- Depth Areas -->
+  <layer>
+    <name>DEPARE</name>
+    <style>
+      <fill_color>070707</fill_color>
+      <line_color>888</line_color>
+      <line_width>1</line_width>
+      <marker_size>0</marker_size>
+    </style>
+    <cutoff_attr>DRVAL1</cutoff_attr>
+    <cutoff>
+      <value>0</value>
+      <style>
+        <fill_color>15251f</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>2</value>
+      <style>
+        <fill_color>16232f</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>5</value>
+      <style>
+        <fill_color>151b21</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>10</value>
+      <style>
+        <fill_color>0c0e0f</fill_color>
+      </style>
+    </cutoff>
+  </layer>
+
+  <!-- Lake Areas -->
+  <layer>
+    <name>LAKARE</name>
+    <style>
+      <fill_color>16232f</fill_color>
+      <line_color>888</line_color>
+      <line_width>1</line_width>
+      <marker_size>0</marker_size>
+    </style>
+  </layer>
+
   <!-- Shoreline Construction -->
   <layer>
     <name>SLCONS</name>
@@ -42,10 +89,9 @@
   <layer>
     <name>SOUNDG</name>
     <style>
-      <fill_color>000</fill_color>
-      <line_color>000</line_color>
-      <line_width>0</line_width>
-      <marker_size>0</marker_size>
+      <text_color>474e4f</text_color>
+      <text_font>monospace</text_font>
+      <text_size>12</text_size>
     </style>
   </layer>
 

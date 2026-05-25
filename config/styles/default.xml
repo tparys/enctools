@@ -52,6 +52,17 @@
     </cutoff>
   </layer>
 
+  <!-- Lake Areas -->
+  <layer>
+    <name>LAKARE</name>
+    <style>
+      <fill_color>73b5ee</fill_color>
+      <line_color>888</line_color>
+      <line_width>1</line_width>
+      <marker_size>0</marker_size>
+    </style>
+  </layer>
+
   <!-- Shoreline Construction -->
   <layer>
     <name>SLCONS</name>
