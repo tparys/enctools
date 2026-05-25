@@ -26,7 +26,7 @@ void usage(int exit_code)
            "  -c <path>  - Set config directory (default=~/.config)\n"
            "  -o <file>  - Set output file (default=out.png)\n"
            "  -s <name>  - Set render style (default=default)\n"
-           "  -w         - Use WTMS coordinate system (default=XYZ)\n"
+           "  -x         - Use WTMS coordinate system (default=WTMS)\n"
            "\n"
            "Where:\n"
            "  X          - Horizontal tile coordinate\n"
@@ -38,13 +38,13 @@ void usage(int exit_code)
 int main(int argc, char **argv)
 {
     int opt;
-    encviz::tile_coords tc = encviz::tile_coords::XYZ;
+    encviz::tile_coords tc = encviz::tile_coords::WTMS;
     std::string out_file = "out.png";
     const char *config_path = nullptr;
     const char *style_name = "default";
 
     // Parse args
-    while ((opt = getopt(argc, argv, "hc:o:s:w")) != -1)
+    while ((opt = getopt(argc, argv, "hc:o:s:x")) != -1)
     {
         switch (opt)
         {
@@ -68,8 +68,8 @@ int main(int argc, char **argv)
                 style_name = optarg;
                 break;
 
-            case 'w':
-                tc = encviz::tile_coords::WTMS;
+            case 'x':
+                tc = encviz::tile_coords::XYZ;
                 break;
 
             default:
