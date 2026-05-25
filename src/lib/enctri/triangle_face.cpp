@@ -4,9 +4,6 @@
  * Operations relating to locating points on a 2D triangle mesh with height data.
  */
 
-// FIXME
-#include <cstdio>
-
 #include <cmath>
 #include <enctri/triangle_face.h>
 
