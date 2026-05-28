@@ -86,12 +86,42 @@ color parse_color(const char *code)
 }
 
 /**
+ * Load Color from Code or Theme
+ *
+ * \param[in] color Color code text
+ * \param[in] theme Color code theme
+ * \return Parsed color code
+ */
+color load_color(const char *color, const color_theme &theme)
+{
+    if (color[0] == '@')
+    {
+        // Theme color
+        std::string name = color;
+        name = name.substr(1);
+        auto it = theme.find(name);
+        if (it == theme.end())
+        {
+            throw std::runtime_error("Invalid theme color");
+        }
+        return it->second;
+    }
+    else
+    {
+        // Base color code
+        return parse_color(color);
+    }
+}
+
+/**
  * Parse Layer Style
  *
  * \param[in] node Layer element
+ * \param[in] theme Color theme for file
  * \return Parsed layer style
  */
-layer_style parse_layer_style(tinyxml2::XMLElement *node)
+layer_style parse_layer_style(tinyxml2::XMLElement *node,
+                              const color_theme &theme)
 {
     // Sanity check
     if (node == nullptr)
@@ -104,7 +134,7 @@ layer_style parse_layer_style(tinyxml2::XMLElement *node)
     parsed.layer_name = xml_text(xml_query(node, "name"));
     tinyxml2::XMLElement *child;
     child = xml_query(node, "style");
-    parsed.style = parse_simple_style(child);
+    parsed.style = parse_simple_style(child, theme);
 
     // Optional attribute based cutoffs
     child = xml_query(node, "cutoff_attr", true);
@@ -116,7 +146,7 @@ layer_style parse_layer_style(tinyxml2::XMLElement *node)
             child = xml_query(style_node, "value");
             parsed.cutoff_values.push_back(atof(xml_text(child)));
             child = xml_query(style_node, "style");
-            parsed.cutoff_styles.push_back(parse_simple_style(child, parsed.style));
+            parsed.cutoff_styles.push_back(parse_simple_style(child, theme, parsed.style));
         }
     }
     
@@ -127,22 +157,26 @@ layer_style parse_layer_style(tinyxml2::XMLElement *node)
  * Parse Simple Style
  *
  * \param[in] node Layer element
+ * \param[in] theme Color theme for file
  * \return Parsed layer style
  */
-simple_style parse_simple_style(tinyxml2::XMLElement *node)
+simple_style parse_simple_style(tinyxml2::XMLElement *node,
+                                const color_theme &theme)
 {
     simple_style defaults;
-    return parse_simple_style(node, defaults);
+    return parse_simple_style(node, theme, defaults);
 }
 
 /**
  * Parse Simple Style with default
  *
  * \param[in] node Layer element
+ * \param[in] theme Color theme for file
  * \param[in] defaults Default style
  * \return Parsed layer style
  */
 simple_style parse_simple_style(tinyxml2::XMLElement *node,
+                                const color_theme &theme,
                                 const simple_style &defaults)
 {
     // Sanity check
@@ -159,12 +193,12 @@ simple_style parse_simple_style(tinyxml2::XMLElement *node,
     child = xml_query(node, "fill_color", true);
     if (child)
     {
-        parsed.fill_color = parse_color(xml_text(child));
+        parsed.fill_color = load_color(xml_text(child), theme);
     }
     child = xml_query(node, "line_color", true);
     if (child)
     {
-        parsed.line_color = parse_color(xml_text(child));
+        parsed.line_color = load_color(xml_text(child), theme);
     }
     child = xml_query(node, "line_width", true);
     if (child)
@@ -179,7 +213,7 @@ simple_style parse_simple_style(tinyxml2::XMLElement *node,
     child = xml_query(node, "text_color", true);
     if (child)
     {
-        parsed.text_color = parse_color(xml_text(child));
+        parsed.text_color = load_color(xml_text(child), theme);
     }
     child = xml_query(node, "text_font", true);
     if (child)
@@ -201,7 +235,7 @@ simple_style parse_simple_style(tinyxml2::XMLElement *node,
  * \param[in] filename Path to style file
  * \return Loaded style
  */
-render_style load_style(const std::string &filename)
+render_style load_style(const std::string &filename, const color_theme &theme)
 {
     // Load XML document
     tinyxml2::XMLDocument doc;
@@ -216,15 +250,63 @@ render_style load_style(const std::string &filename)
     render_style parsed;
     try
     {
-        parsed.background = parse_color(xml_text(xml_query(root, "background")));
+        parsed.background = load_color(xml_text(xml_query(root, "background")), theme);
     }
     catch (...) {}
     for (tinyxml2::XMLElement *child : xml_query_all(root, "layer"))
     {
-        parsed.layers.push_back(parse_layer_style(child));
+        parsed.layers.push_back(parse_layer_style(child, theme));
     }
     
     return parsed;
+}
+
+/**
+ * Load Color Themes from File
+ *
+ * \param[in] filename Path to style file
+ * \return Loaded themes
+ */
+color_theme_map load_themes(const std::string &filename)
+{
+    // Load XML document
+    tinyxml2::XMLDocument doc;
+    if (doc.LoadFile(filename.c_str()))
+    {
+        // Parse error?
+        throw std::runtime_error("Cannot parse " + filename);
+    }
+
+    // Load theme names
+    std::vector<std::string> theme_names;
+    tinyxml2::XMLElement *root = doc.RootElement();
+    tinyxml2::XMLElement *node = xml_query(root, "themes");
+    for (tinyxml2::XMLElement *child : xml_query_all(node, "name"))
+    {
+        theme_names.push_back(xml_text(child));
+    }
+
+    // Load theme colors
+    color_theme_map themes;
+    for (tinyxml2::XMLElement *node : xml_query_all(root, "color"))
+    {
+        std::string color_name = xml_text(xml_query(node, "name"));
+        auto children = xml_query_all(node, "code");
+        if (theme_names.size() != children.size())
+        {
+            throw std::runtime_error("Theme names and color code count must be equal");
+        }
+        for (size_t i = 0; i < children.size(); i++)
+        {
+            themes[theme_names[i]][color_name] =
+                parse_color(xml_text(children[i]));
+        }
+    }
+
+    // All done
+    printf("Loaded %lu colors across %lu themes\n",
+           themes[theme_names[0]].size(), theme_names.size());
+    return themes;
 }
 
 }; // ~namespace encviz

@@ -3,14 +3,14 @@
        xsi:noNamespaceSchemaLocation="style.xsd">
 
   <!-- White Background -->
-  <background>070707</background>
+  <background>@CHWHT</background>
 
   <!-- Land Areas -->
   <layer>
     <name>LNDARE</name>
     <style>
-      <fill_color>2C291B</fill_color>
-      <line_color>252A2B</line_color>
+      <fill_color>@LANDA</fill_color>
+      <line_color>@CHBLK</line_color>
       <line_width>1</line_width>
       <marker_size>5</marker_size>
     </style>
@@ -20,8 +20,8 @@
   <layer>
     <name>DEPARE</name>
     <style>
-      <fill_color>070707</fill_color>
-      <line_color>888</line_color>
+      <fill_color>@DEPDW</fill_color>
+      <line_color>@DEPCN</line_color>
       <line_width>1</line_width>
       <marker_size>0</marker_size>
     </style>
@@ -29,25 +29,25 @@
     <cutoff>
       <value>0</value>
       <style>
-        <fill_color>15251f</fill_color>
+        <fill_color>@DEPIT</fill_color>
       </style>
     </cutoff>
     <cutoff>
       <value>2</value>
       <style>
-        <fill_color>16232f</fill_color>
+        <fill_color>@DEPVS</fill_color>
       </style>
     </cutoff>
     <cutoff>
       <value>5</value>
       <style>
-        <fill_color>151b21</fill_color>
+        <fill_color>@DEPMS</fill_color>
       </style>
     </cutoff>
     <cutoff>
       <value>10</value>
       <style>
-        <fill_color>0c0e0f</fill_color>
+        <fill_color>@DEPMD</fill_color>
       </style>
     </cutoff>
   </layer>
@@ -56,8 +56,8 @@
   <layer>
     <name>LAKARE</name>
     <style>
-      <fill_color>16232f</fill_color>
-      <line_color>888</line_color>
+      <fill_color>@DEPVS</fill_color>
+      <line_color>@CHBLK</line_color>
       <line_width>1</line_width>
       <marker_size>0</marker_size>
     </style>
@@ -67,9 +67,9 @@
   <layer>
     <name>SLCONS</name>
     <style>
-      <fill_color>000</fill_color>
-      <line_color>232C34</line_color>
-      <line_width>1</line_width>
+      <fill_color>@CHBLK</fill_color>
+      <line_color>@CHBLK</line_color>
+      <line_width>2</line_width>
       <marker_size>5</marker_size>
     </style>
   </layer>
@@ -78,10 +78,8 @@
   <layer>
     <name>DEPCNT</name>
     <style>
-      <fill_color>000</fill_color>
-      <line_color>1A252F</line_color>
+      <line_color>@CHBLK</line_color>
       <line_width>1</line_width>
-      <marker_size>0</marker_size>
     </style>
   </layer>
 
@@ -89,11 +87,10 @@
   <layer>
     <name>SOUNDG</name>
     <style>
-      <text_color>474e4f</text_color>
+      <text_color>@CHBLK</text_color>
       <text_font>monospace</text_font>
       <text_size>12</text_size>
     </style>
   </layer>
 
 </style>
-

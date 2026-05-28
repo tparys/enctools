@@ -115,6 +115,7 @@ bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
     cairo_surface_t *surface =
         cairo_image_surface_create(CAIRO_FORMAT_ARGB32, tile_size_, tile_size_);
     cairo_t *cr = cairo_create(surface);
+    cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 
     // Flood background w/ white 0xffffff
     if (style.background.has_value())
@@ -467,6 +468,7 @@ void enc_renderer::load_config(const fs::path &config_path)
     std::string land_enabled = xml_text(xml_query(root, "land_enabled"));
     std::string land_path = xml_text(xml_query(root, "land_path"));
     std::string land_layer = xml_text(xml_query(root, "land_layer"));
+    fs::path theme_file = xml_text(xml_query(root, "theme_file"));
     fs::path style_path = xml_text(xml_query(root, "style_path"));
     tile_size_ = atoi(xml_text(xml_query(root, "tile_size")));
     min_scale0_ = atof(xml_text(xml_query(root, "scale_base")));
@@ -476,11 +478,14 @@ void enc_renderer::load_config(const fs::path &config_path)
         chart_path = config_path / chart_path;
     if (meta_path.is_relative())
         meta_path = config_path / meta_path;
+    if (theme_file.is_relative())
+        theme_file = config_path / theme_file;
     if (style_path.is_relative())
         style_path = config_path / style_path;
 
     printf(" - Charts: %s\n", chart_path.string().c_str());
     printf(" - Metadata: %s\n", meta_path.string().c_str());
+    printf(" - Theme: %s\n", theme_file.string().c_str());
     printf(" - Styles: %s\n", style_path.string().c_str());
     printf(" - Tile Size: %d\n", tile_size_);
     printf(" - Scale Base: %g\n", min_scale0_);
@@ -495,13 +500,24 @@ void enc_renderer::load_config(const fs::path &config_path)
         enc_.set_default_land(land_path, land_layer);
     }
 
+    // Load color themes
+    color_theme_map themes = load_themes(theme_file.string());
+
     // Load styles
-    for (const fs::directory_entry &entry : fs::directory_iterator(style_path))
+    for (auto it : themes)
     {
-        fs::path p = entry.path();
-        if (p.extension() == ".xml")
+        const std::string &theme_name = it.first;
+        const color_theme &theme_data = it.second;
+
+        for (const fs::directory_entry &entry : fs::directory_iterator(style_path))
         {
-            styles_[p.stem().string()] = load_style(p.string());
+            fs::path p = entry.path();
+            if (p.extension() == ".xml")
+            {
+                std::string style_name = p.stem().string() + "-" + theme_name;
+                styles_[style_name] = load_style(p.string(), theme_data);
+                printf("Loaded: %s\n", style_name.c_str());
+            }
         }
     }
 }

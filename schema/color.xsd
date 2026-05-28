@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- RGB hex color code -->
+  <xs:simpleType name="color_code">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9A-Fa-f]{6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- List of theme names -->
+  <xs:complexType name="theme_list">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Themed color -->
+  <xs:complexType name="theme_color">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="code" type="color_code" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:element name="table">
+    <xs:complexType>
+      <xs:sequence>
+
+        <xs:element name="theme" type="theme_list"/>
+        <xs:element name="color" type="theme_color" maxOccurs="unbounded"/>
+
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+</xs:schema>

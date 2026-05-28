@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
 #include <optional>
 #include <tinyxml2.h>
 
@@ -86,6 +87,12 @@ struct render_style
     std::vector<layer_style> layers;
 };
 
+// Single color theme
+typedef std::map<std::string, color> color_theme;
+
+// Collection of color themes
+typedef std::map<std::string, color_theme> color_theme_map;
+
 /**
  * Parse Color Code
  *
@@ -101,37 +108,61 @@ struct render_style
 color parse_color(const char *code);
 
 /**
+ * Load Color from Code or Theme
+ *
+ * \param[in] color Color code text
+ * \param[in] theme Color code theme
+ * \return Parsed color code
+ */
+color load_color(const char *color, const color_theme &theme);
+
+/**
  * Parse Layer Style
  *
  * \param[in] node Layer element
+ * \param[in] theme Color theme for file
  * \return Parsed layer style
  */
-layer_style parse_layer_style(tinyxml2::XMLElement *node);
+layer_style parse_layer_style(tinyxml2::XMLElement *node,
+                              const color_theme &theme);
 
 /**
  * Parse Simple Style
  *
  * \param[in] node Layer element
+ * \param[in] theme Color theme for file
  * \return Parsed layer style
  */
-simple_style parse_simple_style(tinyxml2::XMLElement *node);
+simple_style parse_simple_style(tinyxml2::XMLElement *node,
+                              const color_theme &theme);
 
 /**
  * Parse Simple Style with default
  *
  * \param[in] node Layer element
+ * \param[in] theme Color theme for file
  * \param[in] defaults Default style
  * \return Parsed layer style
  */
 simple_style parse_simple_style(tinyxml2::XMLElement *node,
+                                const color_theme &theme,
                                 const simple_style &defaults);
 
 /**
  * Load Style from File
  *
  * \param[in] filename Path to style file
+ * \param[in] theme Color theme for file
  * \return Loaded style
  */
-render_style load_style(const std::string &filename);
+render_style load_style(const std::string &filename, const color_theme &theme);
+
+/**
+ * Load Color Themes from File
+ *
+ * \param[in] filename Path to style file
+ * \return Loaded themes
+ */
+color_theme_map load_themes(const std::string &filename);
 
 }; // ~namespace encviz
