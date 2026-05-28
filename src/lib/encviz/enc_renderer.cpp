@@ -104,7 +104,7 @@ bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
     int scale_min = (int)round(min_scale0_ * cos(avgLat * M_PI / 180) / pow(2, z));
 
     // Export all data in this tile
-    GDALDataset *tile_data = GetGDALDriverManager()->GetDriverByName("MEM")->
+    GDALDataset *tile_data = GetGDALDriverManager()->GetDriverByName("Memory")->
         Create("", 0, 0, 0, GDT_Unknown, nullptr);
     if (!enc_.export_data(tile_data, layers, bbox, scale_min))
     {

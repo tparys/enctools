@@ -34,7 +34,7 @@ enc_dataset::enc_dataset()
     }
 
     // Get GDAL driver
-    mem_drv_ = GetGDALDriverManager()->GetDriverByName("MEM");
+    mem_drv_ = GetGDALDriverManager()->GetDriverByName("Memory");
     CHECKNULL(mem_drv_, "Cannot load OGR memory driver");
 }
 
