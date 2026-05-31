@@ -21,7 +21,7 @@ namespace encviz
 struct color
 {
     /// Red channel (8 bit)
-    uint8_t alpha{255};
+    uint8_t alpha{0};
 
     /// Red channel (8 bit)
     uint8_t red{0};
