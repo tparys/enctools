@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     encviz::tile_coords tc = encviz::tile_coords::WTMS;
     std::string out_file = "out.png";
     const char *config_path = nullptr;
-    const char *style_name = "default";
+    const char *style_name = "base-day";
 
     // Parse args
     while ((opt = getopt(argc, argv, "hc:o:s:x")) != -1)
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
                 break;
 
             case 's':
-                // Set min display scale
+                // Set style name
                 style_name = optarg;
                 break;
 
