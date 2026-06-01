@@ -261,7 +261,7 @@ void enc_renderer::render_depth(cairo_t *cr, const OGRPoint *geo,
     cairo_text_extents(cr, text, &extents);
 
     // Draw text
-    cairo_move_to(cr, c.x - extents.width/2, c.y - extents.height/2);
+    cairo_move_to(cr, c.x - extents.width/2, c.y + extents.height/2);
     cairo_show_text(cr, text);
 }
 
