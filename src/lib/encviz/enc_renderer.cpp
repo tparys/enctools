@@ -254,7 +254,7 @@ void enc_renderer::render_depth(cairo_t *cr, const OGRPoint *geo,
     cairo_select_font_face(cr, "monospace",
                            CAIRO_FONT_SLANT_NORMAL,
                            CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(cr, 12);
+    cairo_set_font_size(cr, style.text_size);
 
     // Determine text render size
     cairo_text_extents_t extents = {};
