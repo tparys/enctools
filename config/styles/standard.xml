@@ -38,11 +38,57 @@
     </cutoff>
   </layer>
 
+  <!-- Dredged Areas -->
+  <layer>
+    <name>DRGARE</name>
+    <style>
+      <fill_color>@DEPDW</fill_color>
+      <line_color>@CHBLK</line_color>
+      <line_width>1</line_width>
+    </style>
+    <cutoff_attr>DRVAL2</cutoff_attr>
+    <cutoff>
+      <value>0</value>
+      <style>
+        <fill_color>@DEPIT</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>2</value>
+      <style>
+        <fill_color>@DEPVS</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>5</value>
+      <style>
+        <fill_color>@DEPMS</fill_color>
+      </style>
+    </cutoff>
+    <cutoff>
+      <value>10</value>
+      <style>
+        <fill_color>@DEPMD</fill_color>
+      </style>
+    </cutoff>
+  </layer>
+
   <!-- Land Areas -->
   <layer>
     <name>LNDARE</name>
     <style>
       <fill_color>@LANDA</fill_color>
+      <line_color>@CHBLK</line_color>
+      <line_width>1</line_width>
+      <marker_size>5</marker_size>
+    </style>
+  </layer>
+
+  <!-- Land Areas -->
+  <layer>
+    <name>BUAARE</name>
+    <style>
+      <fill_color>@LANDF</fill_color>
       <line_color>@CHBLK</line_color>
       <line_width>1</line_width>
       <marker_size>5</marker_size>
@@ -68,6 +114,15 @@
       <line_color>@CHBLK</line_color>
       <line_width>1</line_width>
       <marker_size>5</marker_size>
+    </style>
+  </layer>
+
+  <!-- Depth Contours -->
+  <layer>
+    <name>DEPCNT</name>
+    <style>
+      <line_color>@DEPCN</line_color>
+      <line_width>1</line_width>
     </style>
   </layer>
 

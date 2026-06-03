@@ -117,7 +117,7 @@ bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
     cairo_t *cr = cairo_create(surface);
     cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 
-    // Flood background w/ white 0xffffff
+    // Flood background
     if (style.background.has_value())
     {
         set_color(cr, style.background.value());

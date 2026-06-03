@@ -44,11 +44,11 @@
         maxZoom: 30});
     var encviz3 = L.tileLayer('http://127.0.0.1:8888/base-night/{z}/{y}/{x}.png', {
         maxZoom: 30});
-    var encviz4 = L.tileLayer('http://127.0.0.1:8888/extra-day/{z}/{y}/{x}.png', {
+    var encviz4 = L.tileLayer('http://127.0.0.1:8888/standard-day/{z}/{y}/{x}.png', {
         maxZoom: 30});
-    var encviz5 = L.tileLayer('http://127.0.0.1:8888/extra-dusk/{z}/{y}/{x}.png', {
+    var encviz5 = L.tileLayer('http://127.0.0.1:8888/standard-dusk/{z}/{y}/{x}.png', {
         maxZoom: 30});
-    var encviz6 = L.tileLayer('http://127.0.0.1:8888/extra-night/{z}/{y}/{x}.png', {
+    var encviz6 = L.tileLayer('http://127.0.0.1:8888/standard-night/{z}/{y}/{x}.png', {
         maxZoom: 30});
 
     // Create layer manager
@@ -57,9 +57,9 @@
         "Base (Day)": encviz1,
         "Base (Dusk)": encviz2,
         "Base (Night)": encviz3,
-        "Extra (Day)": encviz4,
-        "Extra (Dusk)": encviz5,
-        "Extra (Night)": encviz6
+        "Standard (Day)": encviz4,
+        "Standard (Dusk)": encviz5,
+        "Standard (Night)": encviz6
     };
     var overlayMaps = {};
     var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
