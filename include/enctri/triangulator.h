@@ -23,11 +23,6 @@ public:
     ~triangulator();
 
     /**
-     * Draw triangulation (Qt)
-     */
-    void draw();
-
-    /**
      * Get triangulation mesh
      *
      * \return Internal triangulation

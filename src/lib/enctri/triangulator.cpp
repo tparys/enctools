@@ -2,9 +2,6 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Constrained_Delaunay_triangulation_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
-#ifndef CGAL_NO_DRAW_CDT
-  #include <CGAL/draw_constrained_triangulation_2.h>
-#endif
 #include <enctri/triangle_face.h>
 #include <enctri/triangulator.h>
 
@@ -62,18 +59,6 @@ triangulator::triangulator()
 triangulator::~triangulator()
 {
     delete CDT;
-}
-
-/**
- * Draw triangulation via Qt
- */
-void triangulator::draw()
-{
-#ifndef CGAL_NO_DRAW_CDT
-    CGAL::draw(*CDT);
-#else
-    throw std::runtime_error("Function not supported");
-#endif
 }
 
 /**

@@ -183,7 +183,7 @@ bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &
     for (const std::string &layer_name : layers)
     {
         create_layer(ods, layer_name.c_str());
-    };
+    }
 
     // Going to need 3 working layers
     OGRLayer *clip_layer = create_layer(temp_ds.get(), "");
