@@ -151,6 +151,7 @@ int main(int argc, char **argv)
                                           &request_handler, &enc_rend, MHD_OPTION_END);
     if (daemon == nullptr)
     {
+        printf("FATAL - Could not start server (port in use?)\n");
 	return 1;
     }
 
