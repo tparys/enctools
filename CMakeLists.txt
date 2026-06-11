@@ -22,6 +22,15 @@ pkg_check_modules(MICROHTTPD REQUIRED libmicrohttpd)
 pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
 find_package(CGAL REQUIRED)
 
+# Pick GDAL memory driver to use
+#  - Newer versions should use "Memory", "MEM" raises deprecation warnings
+#  - Older versions should use "MEM", as "Memory" may not work at all
+if (GDAL_VERSION VERSION_LESS "3.11")
+  add_compile_definitions(GDAL_MEM_DRIVER="Memory")
+else()
+  add_compile_definitions(GDAL_MEM_DRIVER="MEM")
+endif()
+
 # Earlier versions of microhttpd don't define MHD_Result,
 # and just use an int in it's place, so detect that ...
 try_compile(MICROHTTP_HAS_MHD_RESULT
