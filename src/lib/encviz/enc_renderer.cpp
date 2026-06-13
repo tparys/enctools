@@ -465,9 +465,16 @@ void enc_renderer::load_config(const fs::path &config_path)
     tinyxml2::XMLElement *root = doc.RootElement();
     fs::path chart_path = xml_text(xml_query(root, "chart_path"));
     fs::path meta_path = xml_text(xml_query(root, "meta_path"));
-    std::string land_enabled = xml_text(xml_query(root, "land_enabled"));
-    std::string land_path = xml_text(xml_query(root, "land_path"));
-    std::string land_layer = xml_text(xml_query(root, "land_layer"));
+    std::string land_path;
+    if (!xml_query_all(root, "land_path").empty())
+    {
+        land_path = xml_text(xml_query(root, "land_path"));
+    }
+    std::string land_layer;
+    if (!xml_query_all(root, "land_layer").empty())
+    {
+        land_layer = xml_text(xml_query(root, "land_layer"));
+    }
     fs::path theme_file = xml_text(xml_query(root, "theme_file"));
     fs::path style_path = xml_text(xml_query(root, "style_path"));
     tile_size_ = atoi(xml_text(xml_query(root, "tile_size")));
@@ -495,7 +502,7 @@ void enc_renderer::load_config(const fs::path &config_path)
     enc_.load_charts(chart_path);
 
     // Configure default land layer
-    if (land_enabled == "true")
+    if (!land_path.empty())
     {
         enc_.set_default_land(land_path, land_layer);
     }

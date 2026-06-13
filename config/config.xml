@@ -8,14 +8,11 @@
   <!-- Location to store ENC metadata -->
   <meta_path>meta</meta_path>
 
-  <!-- Enable or disable default land coverage -->
-  <land_enabled>false</land_enabled>
-
-  <!-- Land coverage file -->
+  <!-- Land coverage file (optional) -->
   <land_path>path/to/GSHHS_l_L1.shp</land_path>
 
-  <!-- Land coverage layer -->
-  <land_layer>GSHHS_l_L1</land_layer>
+  <!-- Land coverage layer (optional) -->
+  <!-- <land_layer>GSHHS_l_L1</land_layer> -->
 
   <!-- Location to color themes -->
   <theme_file>color-table.xml</theme_file>

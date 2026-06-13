@@ -7,9 +7,8 @@
 
         <xs:element name="chart_path" type="xs:string"/>
         <xs:element name="meta_path" type="xs:string"/>
-        <xs:element name="land_enabled" type="xs:boolean"/>
-        <xs:element name="land_path" type="xs:string"/>
-        <xs:element name="land_layer" type="xs:string"/>
+        <xs:element name="land_path" type="xs:string" minOccurs="0"/>
+        <xs:element name="land_layer" type="xs:string" minOccurs="0"/>
         <xs:element name="style_path" type="xs:string"/>
         <xs:element name="tile_size" type="xs:integer"/>
         <xs:element name="scale_base" type="xs:float"/>

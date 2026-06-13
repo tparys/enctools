@@ -59,6 +59,30 @@ void enc_dataset::set_default_land(const std::string &file_name,
 {
     land_file_name_ = file_name;
     land_layer_name_ = layer_name;
+
+    // Check default land layer
+    GDALDataset *ids = GDALDataset::Open(land_file_name_.c_str(),
+                                         GDAL_OF_VECTOR | GDAL_OF_READONLY,
+                                         nullptr, nullptr, nullptr);
+    if (ids == nullptr)
+    {
+        printf(" - Default land disabled, cannot open: %s\n", land_file_name_.c_str());
+        land_file_name_.clear();
+        land_layer_name_.clear();
+    }
+    else
+    {
+        // If no layer specified, use first
+        if (land_layer_name_.empty())
+        {
+            land_layer_name_ = ids->GetLayer(0)->GetName();
+        }
+
+        // Cleanup
+        printf(" - Default land loaded: %s [%s]\n",
+               land_file_name_.c_str(), land_layer_name_.c_str());
+        delete ids;
+    }
 }
 
 /**
