@@ -9,8 +9,10 @@ namespace enctri
  *
  * \param[in] ds ENC dataset
  */
-enc_triangulator::enc_triangulator(GDALDataset *ds)
+enc_triangulator::enc_triangulator(GDALDataset *ds,
+                                   OGRCoordinateTransformation *ds_ct)
     : ds_(ds)
+    , ds_ct_(ds_ct)
 {
     load_land_areas();
     load_soundings();
@@ -193,12 +195,20 @@ encdata::path_2d enc_triangulator::convert_ogrlinestring(const OGRLineString *li
 encdata::point_2d enc_triangulator::convert_ogrpoint2d(const OGRPoint *point)
 {
     encdata::point_2d p = { point->getX(), point->getY() };
+    if (ds_ct_)
+    {
+        ds_ct_->Transform(1, &p.x, &p.y);
+    }
     return p;
 }
 
 encdata::point_3d enc_triangulator::convert_ogrpoint3d(const OGRPoint *point)
 {
     encdata::point_3d p = { point->getX(), point->getY(), point->getZ() };
+    if (ds_ct_)
+    {
+        ds_ct_->Transform(1, &p.x, &p.y);
+    }
     return p;
 }
 

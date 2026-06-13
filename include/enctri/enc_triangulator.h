@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gdal_priv.h>
+#include <ogr_spatialref.h>
 #include <ogrsf_frmts.h>
 #include <enctri/triangulator.h>
 
@@ -15,8 +16,10 @@ public:
      * Constructor
      *
      * \param[in] ds ENC dataset
+     * \param[in] ds_ct Coordinate transform (optional)
      */
-    enc_triangulator(GDALDataset *ds);
+    enc_triangulator(GDALDataset *ds,
+                     OGRCoordinateTransformation *ds_ct = nullptr);
 
     /**
      * Rasterize to GDAL Dataset
@@ -49,6 +52,9 @@ private:
 
     /// Internal GDAL dataset
     GDALDataset *ds_;
+
+    /// Internal Coordinate Transform
+    OGRCoordinateTransformation *ds_ct_;
 
 };
 
