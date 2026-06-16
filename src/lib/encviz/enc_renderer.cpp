@@ -106,7 +106,7 @@ bool enc_renderer::render(std::vector<uint8_t> &data, tile_coords tc,
     // Export all data in this tile
     GDALDataset *tile_data = GetGDALDriverManager()->GetDriverByName(GDAL_MEM_DRIVER)->
         Create("", 0, 0, 0, GDT_Unknown, nullptr);
-    if (!enc_.export_data(tile_data, layers, bbox, scale_min))
+    if (!enc_.export_bbox(tile_data, bbox, layers, scale_min))
     {
         return false;
     }

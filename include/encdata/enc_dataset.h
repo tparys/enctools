@@ -78,34 +78,49 @@ public:
     bool load_chart(const std::filesystem::path &path);
 
     /**
-     * Export ENC Data to Empty Dataset
-     *
-     * Creates specified layers in output dataset, populating with best data
-     * available for given bounding box and minimum presentation scale.
+     * Export ENC Chart to Empty Dataset
      *
      * \param[out] ds Output dataset
+     * \param[out] bbox Data bounding box
+     * \param[in] name Specified chart name
      * \param[in] layers Specified ENC layers (S57)
-     * \param[in] bbox Data bounding box (deg)
-     * \param[in] scale_min Minimum data compilation scale
      * \return False if no data available
      */
-    bool export_data(GDALDataset *ods, const std::vector<std::string> &layers,
-                     const OGREnvelope &bbox, int scale_min);
+    bool export_chart(GDALDataset *ods, OGREnvelope &bbox,
+                      const std::string &name,
+                      const std::vector<std::string> &layers);
 
     /**
-     * Export ENC Data to Empty Dataset
+     * Export ENC Data by Bounding Box to Empty Dataset
      *
      * Creates specified layers in output dataset, populating with best data
      * available for given bounding box and minimum presentation scale.
      *
      * \param[out] ds Output dataset
+     * \param[in] bbox Data bounding box
      * \param[in] layers Specified ENC layers (S57)
-     * \param[in] poly Data bounds (deg)
      * \param[in] scale_min Minimum data compilation scale
      * \return False if no data available
      */
-    bool export_data(GDALDataset *ods, const std::vector<std::string> &layers,
-                     const OGRPolygon &poly, int scale_min);
+    bool export_bbox(GDALDataset *ods, const OGREnvelope &bbox,
+                     const std::vector<std::string> &layers,
+                     int scale_min);
+
+    /**
+     * Export ENC Data by Polygon to Empty Dataset
+     *
+     * Creates specified layers in output dataset, populating with best data
+     * available for given bounding box and minimum presentation scale.
+     *
+     * \param[out] ds Output dataset
+     * \param[in] poly Data bounds
+     * \param[in] layers Specified ENC layers (S57)
+     * \param[in] scale_min Minimum data compilation scale
+     * \return False if no data available
+     */
+    bool export_poly(GDALDataset *ods, const OGRPolygon &poly,
+                     const std::vector<std::string> &layers,
+                     int scale_min);
 
 private:
 

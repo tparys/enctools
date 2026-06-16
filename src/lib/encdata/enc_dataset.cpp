@@ -123,19 +123,82 @@ bool enc_dataset::load_chart(const std::filesystem::path &path)
 }
 
 /**
- * Export ENC Data to Empty Dataset
+ * Export ENC Chart to Empty Dataset
+ *
+ * \param[out] ds Output dataset
+ * \param[out] bbox Data bounding box
+ * \param[in] name Specified chart name
+ * \param[in] layers Specified ENC layers (S57)
+ * \return False if no data available
+ */
+bool enc_dataset::export_chart(GDALDataset *ods, OGREnvelope &bbox,
+                               const std::string &name,
+                               const std::vector<std::string> &layers)
+{
+    // Find specified chart
+    auto chart_it = charts_.find(name);
+    if (chart_it == charts_.end())
+    {
+        return false; // Not found
+    }
+    const metadata &chart = chart_it->second;
+    bbox = chart.bbox;
+    printf("Load %s:\n", chart.path.c_str());
+    printf(" - Scale=%d\n", chart.scale);
+    printf(" - BBOX=(%g to %g),(%g to %g)\n",
+           bbox.MinX, bbox.MaxX, bbox.MinY, bbox.MaxY);
+
+    // Open input data set
+    printf(" - Process: %s\n", chart.path.stem().string().c_str());
+    GDALDataset *ids = GDALDataset::Open(chart.path.string().c_str(),
+                                         GDAL_OF_VECTOR | GDAL_OF_READONLY,
+                                         nullptr, nullptr, nullptr);
+    CHECKNULL(ids, "Cannot open input data set");
+
+    // Process chart's layers
+    for (const std::string &layer_name : layers)
+    {
+        // Get input layer
+        OGRLayer *ilayer = ids->GetLayerByName(layer_name.c_str());
+        if (ilayer == nullptr)
+        {
+            // Inland charts may not have certain features like depth
+            // contours. If not present, just skip and move on
+            continue;
+        }
+
+        // NOTE: Some OGR drivers need to be done in sequence, and don't
+        // like us jumping around betwen layers, like KML ...
+        OGRLayer *olayer = create_layer(ods, layer_name.c_str());
+
+        // Copy over features
+        for (auto &feat : ilayer)
+        {
+            if (olayer->CreateFeature(feat.get()) != OGRERR_NONE)
+            {
+                throw std::runtime_error("Cannot copy feature");
+            }
+        }
+    }
+    
+    return true;
+}
+
+/**
+ * Export ENC Data by Bounding Box to Empty Dataset
  *
  * Creates specified layers in output dataset, populating with best data
  * available for given bounding box and minimum presentation scale.
  *
  * \param[out] ds Output dataset
+ * \param[in] bbox Data bounding box
  * \param[in] layers Specified ENC layers (S57)
- * \param[in] bbox Data bounding box (deg)
  * \param[in] scale_min Minimum data compilation scale
  * \return False if no data available
  */
-bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &layers,
-                              const OGREnvelope &bbox, int scale_min)
+bool enc_dataset::export_bbox(GDALDataset *ods, const OGREnvelope &bbox,
+                              const std::vector<std::string> &layers,
+                              int scale_min)
 {
     // Define polygon boundary first
     OGRLinearRing ring;
@@ -149,23 +212,24 @@ bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &
     OGRPolygon poly;
     poly.addRing(&ring);
 
-    return export_data(ods, layers, poly, scale_min);
+    return export_poly(ods, poly, layers, scale_min);
 }
 
 /**
- * Export ENC Data to Empty Dataset
+ * Export ENC Data by Polygon to Empty Dataset
  *
  * Creates specified layers in output dataset, populating with best data
  * available for given bounding box and minimum presentation scale.
  *
  * \param[out] ds Output dataset
+ * \param[in] poly Data bounds
  * \param[in] layers Specified ENC layers (S57)
- * \param[in] poly Data bounds (deg)
  * \param[in] scale_min Minimum data compilation scale
  * \return False if no data available
  */
-bool enc_dataset::export_data(GDALDataset *ods, const std::vector<std::string> &layers,
-                              const OGRPolygon &poly, int scale_min)
+bool enc_dataset::export_poly(GDALDataset *ods, const OGRPolygon &poly,
+                              const std::vector<std::string> &layers,
+                              int scale_min)
 {
     // Query bounding box
     OGREnvelope bbox;

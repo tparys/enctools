@@ -1,7 +1,12 @@
 #include <cstdio>
+#include <filesystem>
 #include <gdal_priv.h>
 #include <ogrsf_frmts.h>
+#include <encdata/enc_dataset.h>
 #include <enctri/enc_triangulator.h>
+#include <encviz/xml_config.h>
+namespace fs = std::filesystem;
+using namespace encviz;
 
 void usage(int exit_code)
 {
@@ -10,6 +15,7 @@ void usage(int exit_code)
            "\n"
            "Options:\n"
            "  -h           - Show help\n"
+           "  -c <path>  - Set config directory (default=~/.enctools/config.xml)\n"
            "  -e <epsg_id> - Set output EPSG CRS\n");
     exit(exit_code);
 }
@@ -17,15 +23,21 @@ void usage(int exit_code)
 int main(int argc, char **argv)
 {
     int opt, epsg_id = -1;
+    const char *config_path = nullptr;
 
     // Parse args
-    while ((opt = getopt(argc, argv, "he:")) != -1)
+    while ((opt = getopt(argc, argv, "hc:e:")) != -1)
     {
         switch (opt)
         {
             case 'h':
                 // Help text
                 usage(0);
+                break;
+
+            case 'c':
+                // Set config path
+                config_path = optarg;
                 break;
 
             case 'e':
@@ -66,19 +78,49 @@ int main(int argc, char **argv)
         ds_ct = OGRCreateCoordinateTransformation(&src_srs, &dst_srs);
     }
 
-    // Open dataset
-    GDALDataset *ds = GDALDataset::Open(argv[optind + 0],
-                                        GDAL_OF_VECTOR | GDAL_OF_READONLY,
-                                        nullptr, nullptr, nullptr);
-    if (!ds)
+    // ENC Dataset
+    encdata::enc_dataset enc_;
+    fs::path config_resolved;
+    if (config_path != nullptr)
     {
-        throw std::runtime_error("Cannot open ENC dataset");
+        config_resolved = config_path;
+    }
+    else
+    {
+        // Default to ~/.enctools
+        config_resolved = getenv("HOME");
+        config_resolved.append(".enctools");
+    }
+    fs::path config_file = config_resolved / "config.xml";
+    printf(" - Reading %s ...\n", config_file.string().c_str());
+    tinyxml2::XMLDocument doc;
+    if (doc.LoadFile(config_file.string().c_str()))
+    {
+        // Parse error?
+        throw std::runtime_error("Cannot parse " + config_file.string());
+    }
+
+    // Read in config
+    tinyxml2::XMLElement *root = doc.RootElement();
+    fs::path chart_path = xml_text(xml_query(root, "chart_path"));
+    fs::path meta_path = xml_text(xml_query(root, "meta_path"));
+    enc_.set_cache_path(meta_path);
+    enc_.load_charts(chart_path);
+
+    // Export named chart
+    GDALDataset *chart_data = GetGDALDriverManager()->GetDriverByName(GDAL_MEM_DRIVER)->
+        Create("", 0, 0, 0, GDT_Unknown, nullptr);
+    OGREnvelope bbox = {};
+    std::vector<std::string> layers = { "LNDARE", "SOUNDG" };
+    if (!enc_.export_chart(chart_data, bbox, argv[optind + 0], layers))
+    {
+        return false;
     }
 
     // Create a triangulator object
-    enctri::enc_triangulator tri(ds, ds_ct);
+    enctri::enc_triangulator tri(chart_data, ds_ct);
     //tri.draw();
-    delete ds;
+    delete chart_data;
 
     tri.gdal_rasterize(argv[optind + 1], argv[optind + 2],
                        atof(argv[optind + 3]), -9999);

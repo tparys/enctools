@@ -31,7 +31,7 @@ void usage(int exit_code)
            "\n"
            "Options:\n"
            "  -h         - Show help\n"
-           "  -c <path>  - Set config directory (default=~/.config)\n"
+           "  -c <path>  - Set config directory (default=~/.enctools/config.xml)\n"
            "  -s         - Single threaded operation\n");
     exit(exit_code);
 }
