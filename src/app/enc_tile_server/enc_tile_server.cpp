@@ -22,8 +22,6 @@
 #include <microhttpd.h>
 #include <encviz/enc_renderer.h>
 
-#define PORT 8888
-
 void usage(int exit_code)
 {
     printf("Usage:\n"
@@ -32,6 +30,7 @@ void usage(int exit_code)
            "Options:\n"
            "  -h         - Show help\n"
            "  -c <path>  - Set config directory (default=~/.enctools/config.xml)\n"
+           "  -p <port>  - Set server port (default=8888)\n"
            "  -s         - Single threaded operation\n");
     exit(exit_code);
 }
@@ -110,11 +109,11 @@ MHD_Result request_handler(void *cls, struct MHD_Connection *connection,
 
 int main(int argc, char **argv)
 {
-    int opt, mhd_mode = MHD_USE_THREAD_PER_CONNECTION;
+    int opt, port = 8888, mhd_mode = MHD_USE_THREAD_PER_CONNECTION;
     const char *config_path = nullptr;
 
     // Parse args
-    while ((opt = getopt(argc, argv, "hc:s")) != -1)
+    while ((opt = getopt(argc, argv, "hc:p:s")) != -1)
     {
         switch (opt)
         {
@@ -126,6 +125,11 @@ int main(int argc, char **argv)
             case 'c':
                 // Set config path
                 config_path = optarg;
+                break;
+
+            case 'p':
+                // Set port
+                port = atoi(optarg);
                 break;
 
             case 's':
@@ -147,7 +151,7 @@ int main(int argc, char **argv)
 
     // Start MHD
     MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | mhd_mode,
-                                          PORT, NULL, NULL,
+                                          port, NULL, NULL,
                                           &request_handler, &enc_rend, MHD_OPTION_END);
     if (daemon == nullptr)
     {

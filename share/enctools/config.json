@@ -1,0 +1,14 @@
+{
+    "data":
+    {
+        "chart-dir": "charts",
+        //"land-file": "/path/to/GSHHS_l_L1.shp",
+        //"land-layer": "GSHHS_l_L1",
+        "metadata-path": "meta"
+    },
+    "tile":
+    {
+        "tile-size": 256,
+        "scale-base": 5.92e8
+    }
+}

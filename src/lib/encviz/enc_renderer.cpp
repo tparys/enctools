@@ -6,8 +6,8 @@
  */
 
 #include <encdata/os_paths.h>
+#include <encdata/config_reader.h>
 #include <encviz/enc_renderer.h>
-#include <encviz/xml_config.h>
 namespace fs = std::filesystem;
 
 namespace encviz
@@ -446,34 +446,18 @@ void enc_renderer::load_config(const char *argv0, const fs::path &config_path)
     printf("Using config directory: %s ...\n", config_path.string().c_str());
     printf("Using share directory: %s ...\n", share_path.c_str());
 
-    // Load XML document
-    fs::path config_file = config_path / "config.xml";
-    printf(" - Reading %s ...\n", config_file.string().c_str());
-    tinyxml2::XMLDocument doc;
-    if (doc.LoadFile(config_file.string().c_str()))
-    {
-        // Parse error?
-        throw std::runtime_error("Cannot parse " + config_file.string());
-    }
+    // Load config file
+    encdata::config_reader cfg((config_path / "config.json").string().c_str());
 
     // Read in config
-    tinyxml2::XMLElement *root = doc.RootElement();
-    fs::path chart_path = xml_text(xml_query(root, "chart_path"));
-    fs::path meta_path = xml_text(xml_query(root, "meta_path"));
-    std::string land_path;
-    if (!xml_query_all(root, "land_path").empty())
-    {
-        land_path = xml_text(xml_query(root, "land_path"));
-    }
-    std::string land_layer;
-    if (!xml_query_all(root, "land_layer").empty())
-    {
-        land_layer = xml_text(xml_query(root, "land_layer"));
-    }
+    fs::path chart_path = cfg.get<std::string>(".data.chart-dir");
+    fs::path meta_path = cfg.get<std::string>(".data.meta-dir", "meta");
+    std::string land_path = cfg.get<std::string>(".data.land-file", "");
+    std::string land_layer = cfg.get<std::string>(".data.land-layer", "");
     fs::path theme_file = share_path / "color-table.json";
     fs::path style_path = share_path / "styles";
-    tile_size_ = atoi(xml_text(xml_query(root, "tile_size")));
-    min_scale0_ = atof(xml_text(xml_query(root, "scale_base")));
+    tile_size_ = cfg.get<int>(".tile.tile-size");
+    min_scale0_ = cfg.get<double>(".tile.scale-base");
 
     // Ensure some paths are absolute
     if (chart_path.is_relative())
