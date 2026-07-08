@@ -5,6 +5,7 @@
  * C++ abstraction class to handle visualization of ENC(S-57) chart data.
  */
 
+#include <encdata/os_paths.h>
 #include <encviz/enc_renderer.h>
 #include <encviz/xml_config.h>
 namespace fs = std::filesystem;
@@ -36,23 +37,13 @@ static cairo_status_t cairo_write_to_vector(void *closure,
 /**
  * Constructor
  *
+ * \param[in] argv0 Application run path
  * \param[in] tile_size Dimension of output image
  * \param[in] min_scale0 Min display scale at zoom=0
  */
-enc_renderer::enc_renderer(const char *config_path)
+enc_renderer::enc_renderer(const char *argv0, const char *config_path)
 {
-    // Load specified, or default config path
-    if (config_path != nullptr)
-    {
-        load_config(config_path);
-    }
-    else
-    {
-        // Default to ~/.enctools
-        fs::path default_path = getenv("HOME");
-        default_path.append(".enctools");
-        load_config(default_path);
-    }
+    load_config(argv0, encdata::get_user_config_path(config_path));
 }
 
 /**
@@ -445,11 +436,15 @@ void enc_renderer::set_color(cairo_t *cr, const color &c)
 /**
  * Load Configuration
  *
- * \param[in] config_path
+ * \param[in] argv0 Application run path
+ * \param[in] config_path Specified config path
  */
-void enc_renderer::load_config(const fs::path &config_path)
+void enc_renderer::load_config(const char *argv0, const fs::path &config_path)
 {
+    const fs::path share_path = encdata::get_user_share_path(argv0);
+    
     printf("Using config directory: %s ...\n", config_path.string().c_str());
+    printf("Using share directory: %s ...\n", share_path.c_str());
 
     // Load XML document
     fs::path config_file = config_path / "config.xml";
@@ -475,20 +470,16 @@ void enc_renderer::load_config(const fs::path &config_path)
     {
         land_layer = xml_text(xml_query(root, "land_layer"));
     }
-    fs::path theme_file = xml_text(xml_query(root, "theme_file"));
-    fs::path style_path = xml_text(xml_query(root, "style_path"));
+    fs::path theme_file = share_path / "color-table.json";
+    fs::path style_path = share_path / "styles";
     tile_size_ = atoi(xml_text(xml_query(root, "tile_size")));
     min_scale0_ = atof(xml_text(xml_query(root, "scale_base")));
 
-    // Ensure paths are absolute
+    // Ensure some paths are absolute
     if (chart_path.is_relative())
         chart_path = config_path / chart_path;
     if (meta_path.is_relative())
         meta_path = config_path / meta_path;
-    if (theme_file.is_relative())
-        theme_file = config_path / theme_file;
-    if (style_path.is_relative())
-        style_path = config_path / style_path;
 
     printf(" - Charts: %s\n", chart_path.string().c_str());
     printf(" - Metadata: %s\n", meta_path.string().c_str());

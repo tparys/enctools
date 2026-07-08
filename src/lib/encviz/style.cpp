@@ -6,8 +6,11 @@
  */
 
 #include <cstdio>
+#include <iostream>
+#include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <json/reader.h>
 #include <encviz/style.h>
 #include <encviz/xml_config.h>
 
@@ -269,37 +272,58 @@ render_style load_style(const std::string &filename, const color_theme &theme)
  */
 color_theme_map load_themes(const std::string &filename)
 {
-    // Load XML document
-    tinyxml2::XMLDocument doc;
-    if (doc.LoadFile(filename.c_str()))
+    // Open input file
+    std::ifstream handle(filename.c_str());
+    if (!handle.good())
     {
-        // Parse error?
-        throw std::runtime_error("Cannot parse " + filename);
+        throw std::runtime_error("Cannot open theme file");
+    }
+
+    // Parse from input file
+    Json::Reader reader;
+    Json::Value root;
+    if (!reader.parse(handle, root))
+    {
+        std::string msg = "Cannot parse theme file: ";
+        msg += reader.getFormattedErrorMessages();
+        throw std::runtime_error(msg);
     }
 
     // Load theme names
     std::vector<std::string> theme_names;
-    tinyxml2::XMLElement *root = doc.RootElement();
-    tinyxml2::XMLElement *node = xml_query(root, "themes");
-    for (tinyxml2::XMLElement *child : xml_query_all(node, "name"))
+    if (!root.isMember("styles") ||
+        (root["styles"].type() != Json::ValueType::arrayValue))
     {
-        theme_names.push_back(xml_text(child));
+        throw std::runtime_error("Theme styles not found");
+    }
+    Json::Value styles = root["styles"];
+    for (Json::ArrayIndex i = 0; i < styles.size(); i++)
+    {
+        if (styles[i].type() == Json::ValueType::stringValue)
+        {
+            theme_names.push_back(styles[i].asString());
+        }
     }
 
     // Load theme colors
     color_theme_map themes;
-    for (tinyxml2::XMLElement *node : xml_query_all(root, "color"))
+    if (!root.isMember("table") ||
+        (root["table"].type() != Json::ValueType::objectValue))
     {
-        std::string color_name = xml_text(xml_query(node, "name"));
-        auto children = xml_query_all(node, "code");
-        if (theme_names.size() != children.size())
+        throw std::runtime_error("Theme colors not found");
+    }
+    Json::Value table = root["table"];
+    for (const auto &color_name : table.getMemberNames())
+    {
+        if ((table[color_name].type() != Json::ValueType::arrayValue) ||
+            (table[color_name].size() != theme_names.size()))
         {
             throw std::runtime_error("Theme names and color code count must be equal");
         }
-        for (size_t i = 0; i < children.size(); i++)
+        for (Json::ArrayIndex i = 0; i < theme_names.size(); i++)
         {
             themes[theme_names[i]][color_name] =
-                parse_color(xml_text(children[i]));
+                parse_color(table[color_name][i].asString().c_str());
         }
     }
 

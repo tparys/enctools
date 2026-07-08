@@ -1,6 +1,9 @@
 add_library(encdata
+  config_reader.cpp
   enc_dataset.cpp
+  os_paths.cpp
   )
 target_link_libraries(encdata
   ${GDAL_LIBRARIES}
+  ${JSONCPP_LIBRARIES}
   )

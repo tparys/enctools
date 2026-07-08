@@ -212,4 +212,4 @@ private:
     std::string land_layer_name_;
 };
 
-}; // ~namespace encviz
+}; // ~namespace encdata

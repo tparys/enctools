@@ -143,7 +143,7 @@ int main(int argc, char **argv)
     GDALAllRegister();
 
     // ENC renderer context
-    encviz::enc_renderer enc_rend(config_path);
+    encviz::enc_renderer enc_rend(argv[0], config_path);
 
     // Start MHD
     MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | mhd_mode,

@@ -25,9 +25,10 @@ public:
     /**
      * Constructor
      *
+     * \param[in] argv0 Application run path
      * \param[in] config_path Path to configuration
      */
-    enc_renderer(const char *config_path = nullptr);
+    enc_renderer(const char *argv0, const char *config_path = nullptr);
 
     /**
      * Render Chart Data
@@ -121,9 +122,10 @@ private:
     /**
      * Load Configuration
      *
-     * \param[in] config_path
+     * \param[in] argv0 Application run path
+     * \param[in] config_path Specified config path
      */
-    void load_config(const std::filesystem::path &config_path);
+    void load_config(const char *argv0, const std::filesystem::path &config_path);
 
     /// Dimension of output image
     int tile_size_;

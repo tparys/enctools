@@ -14,12 +14,6 @@
   <!-- Land coverage layer (optional) -->
   <!-- <land_layer>GSHHS_l_L1</land_layer> -->
 
-  <!-- Location to color themes -->
-  <theme_file>color-table.xml</theme_file>
-
-  <!-- Location to store render styles -->
-  <style_path>styles</style_path>
-
   <!-- Size of rendered tiles -->
   <tile_size>256</tile_size>
 
