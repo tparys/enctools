@@ -1,5 +1,5 @@
 add_library(encdata
-  config_reader.cpp
+  config.cpp
   enc_dataset.cpp
   os_paths.cpp
   )

@@ -10,7 +10,7 @@
 #include <fstream>
 #include <filesystem>
 #include <json/reader.h>
-#include <encdata/config_reader.h>
+#include <encdata/config.h>
 
 namespace encdata
 {
@@ -20,7 +20,7 @@ namespace encdata
  *
  * \param[in] path Specified path for config file
  */
-config_reader::config_reader(const char *path)
+config::config(const char *path)
 {
     // Use default path if one not specified
     std::string final_path;
@@ -62,9 +62,9 @@ config_reader::config_reader(const char *path)
  * \param[in] base Alternate search root (optional)
  * \return Found value, or default if available
  */
-Json::Value config_reader::get_json(const std::string &path,
-                                    const Json::Value &default_value,
-                                    const Json::Value &base)
+Json::Value config::get_json(const std::string &path,
+                             const Json::Value &default_value,
+                             const Json::Value &base)
 {
     // Build search path
     Json::Path jpath(path);

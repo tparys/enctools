@@ -15,7 +15,7 @@ namespace encdata
 {
 
 /// Configuration helper class
-class config_reader
+class config
 {
 
 public:
@@ -23,9 +23,10 @@ public:
     /**
      * Constructor
      *
+     * \param[in] argv0 Application run path
      * \param[in] path Specified path for config file
      */
-    config_reader(const char *path = nullptr);
+    config(char const *argv0, const char *path = nullptr);
 
     /**
      * Get Configuration as Type
