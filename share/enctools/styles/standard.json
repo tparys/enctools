@@ -1,0 +1,102 @@
+{
+    "background": "@NODTA",
+    "layers": [
+        // Depth Areas
+        {
+            "name": "DEPARE",
+            "style": {
+                "fill_color": "@DEPDW" 
+            },
+            "cutoff": {
+                "attr": "DRVAL1",
+                "values": [ 0, 2, 5, 10 ],
+                "styles": [
+                    { "fill_color": "@DEPIT" },
+                    { "fill_color": "@DEPVS" },
+                    { "fill_color": "@DEPMS" },
+                    { "fill_color": "@DEPMD" }
+                ]
+            }
+        },
+
+        // Dredged Areas
+        {
+            "name": "DRGARE",
+            "style": {
+                "fill_color": "@DEPDW"
+            },
+            "cutoff": {
+                "attr": "DRVAL1",
+                "values": [ 0, 2, 5, 10 ],
+                "styles": [
+                    { "fill_color": "@DEPIT" },
+                    { "fill_color": "@DEPVS" },
+                    { "fill_color": "@DEPMS" },
+                    { "fill_color": "@DEPMD" }
+                ]
+            }
+        },
+
+        // Land Areas
+        {
+            "name": "LNDARE",
+            "style": {
+                "fill_color": "@LANDA",
+                "line_color": "@CHBLK",
+                "line_width": 1,
+                "marker_size": 5
+            }
+        },
+
+        // Built Up Areas
+        {
+            "name": "BUAARE",
+            "style": {
+                "fill_color": "@LANDF",
+                "line_color": "@CHBLK",
+                "line_width": 1,
+                "marker_size": 5
+            }
+        },
+
+        // Lake Areas
+        {
+            "name": "LAKARE",
+            "style": {
+                "fill_color": "@DEPVS",
+                "line_color": "@CHBLK",
+                "line_width": 1
+            }
+        },
+
+        // Shoreline Construction
+        {
+            "name": "SLCONS",
+            "style": {
+                "fill_color": "@LANDA",
+                "line_color": "@CHBLK",
+                "line_width": 1,
+                "marker_size": 5
+            }
+        },
+
+        // Depth Contours
+        {
+            "name": "DEPCNT",
+            "style": {
+                "line_color": "@DEPCN",
+                "line_width": 1
+            }
+        },
+
+        // Depth Soundings
+        {
+            "name": "SOUNDG",
+            "style": {
+                "text_color": "@CHBLK",
+                "text_font": "monospace",
+                "text_size": 12
+            }
+        }
+    ]
+}

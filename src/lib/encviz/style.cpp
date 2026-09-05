@@ -157,6 +157,42 @@ layer_style parse_layer_style(tinyxml2::XMLElement *node,
 }
 
 /**
+ * Parse Layer Style
+ *
+ * \param[in] node Layer element
+ * \param[in] theme Color theme for file
+ * \return Parsed layer style
+ */
+layer_style parse_layer_style_json(Json::Value &node,
+                                   const color_theme &theme)
+{
+    // Required XML style bits
+    layer_style parsed;
+    parsed.layer_name = node["name"].asString();
+    if (node.isMember("style"))
+    {
+        parsed.style = parse_simple_style_json(node["style"], theme);
+    }
+    if (node.isMember("cutoff"))
+    {
+        Json::Value cutoff = node["cutoff"];
+        parsed.cutoff_attr = cutoff["attr"].asString();
+        Json::Value values = cutoff["values"];
+        for (Json::ArrayIndex i = 0; i < values.size(); i++)
+        {
+            parsed.cutoff_values.push_back(values[i].asFloat());
+        }
+        Json::Value styles = cutoff["styles"];
+        for (Json::ArrayIndex i = 0; i < styles.size(); i++)
+        {
+            parsed.cutoff_styles.push_back(parse_simple_style_json(styles[i], theme, parsed.style));
+        }
+     }
+    
+    return parsed;
+}
+
+/**
  * Parse Simple Style
  *
  * \param[in] node Layer element
@@ -168,6 +204,20 @@ simple_style parse_simple_style(tinyxml2::XMLElement *node,
 {
     simple_style defaults;
     return parse_simple_style(node, theme, defaults);
+}
+
+/**
+ * Parse Simple Style
+ *
+ * \param[in] node Layer element
+ * \param[in] theme Color theme for file
+ * \return Parsed layer style
+ */
+simple_style parse_simple_style_json(Json::Value &node,
+                                     const color_theme &theme)
+{
+    simple_style defaults;
+    return parse_simple_style_json(node, theme, defaults);
 }
 
 /**
@@ -233,6 +283,55 @@ simple_style parse_simple_style(tinyxml2::XMLElement *node,
 }
 
 /**
+ * Parse Simple Style with default
+ *
+ * \param[in] node Layer element
+ * \param[in] theme Color theme for file
+ * \param[in] defaults Default style
+ * \return Parsed layer style
+ */
+simple_style parse_simple_style_json(Json::Value &node,
+                                     const color_theme &theme,
+                                     const simple_style &defaults)
+{
+    // Start from specified defaults
+    simple_style parsed = defaults;
+
+    // Load any specified elements
+    if (node.isMember("fill_color"))
+    {
+        printf("   - fill_color: %s \n", node["fill_color"].asString().c_str());
+        parsed.fill_color = load_color(node["fill_color"].asString().c_str(), theme);
+    }
+    if (node.isMember("line_color"))
+    {
+        parsed.line_color = load_color(node["line_color"].asString().c_str(), theme);
+    }
+    if (node.isMember("line_width"))
+    {
+        parsed.line_width = node["line_width"].asInt();
+    }
+    if (node.isMember("marker_size"))
+    {
+        parsed.marker_size = node["marker_size"].asInt();
+    }
+    if (node.isMember("text_color"))
+    {
+        parsed.text_color = load_color(node["text_color"].asString().c_str(), theme);
+    }
+    if (node.isMember("text_font"))
+    {
+        parsed.text_font = node["text_font"].asString();
+    }
+    if (node.isMember("text_size"))
+    {
+        parsed.text_size = node["text_size"].asInt();
+    }
+    
+    return parsed;
+}
+
+/**
  * Load Style from File
  *
  * \param[in] filename Path to style file
@@ -276,7 +375,7 @@ render_style load_style_json(const std::string &filename, const color_theme &the
     std::ifstream handle(filename.c_str());
     if (!handle.good())
     {
-        throw std::runtime_error("Cannot open theme file");
+        throw std::runtime_error("Cannot open style file");
     }
 
     // Parse from input file
@@ -291,6 +390,21 @@ render_style load_style_json(const std::string &filename, const color_theme &the
 
     // Load Style
     render_style parsed;
+
+    // Background color
+    if (root.isMember("background"))
+    {
+        printf(" - background\n");
+        parsed.background = load_color(root["background"].asString().c_str(), theme);
+    }
+
+    // Layer style
+    Json::Value layers = root["layers"];
+    for (Json::ArrayIndex i = 0; i < layers.size(); i++)
+    {
+        printf(" - layer %u\n", i);
+        parsed.layers.push_back(parse_layer_style_json(layers[i], theme));
+    }
     
     return parsed;
 }

@@ -491,14 +491,14 @@ void enc_renderer::load_config(encdata::config &config)
             if (p.extension() == ".xml")
             {
                 std::string style_name = p.stem().string() + "-" + theme_name;
+                printf("Loading (XML): %s\n", style_name.c_str());
                 styles_[style_name] = load_style(p.string(), theme_data);
-                printf("Loaded (XML): %s\n", style_name.c_str());
             }
             else if (p.extension() == ".json")
             {
                 std::string style_name = p.stem().string() + "-" + theme_name;
+                printf("Loading (JSON): %s\n", style_name.c_str());
                 styles_[style_name] = load_style_json(p.string(), theme_data);
-                printf("Loaded (JSON): %s\n", style_name.c_str());
             }
         }
     }

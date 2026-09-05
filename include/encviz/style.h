@@ -127,6 +127,16 @@ layer_style parse_layer_style(tinyxml2::XMLElement *node,
                               const color_theme &theme);
 
 /**
+ * Parse Layer Style
+ *
+ * \param[in] node Layer element
+ * \param[in] theme Color theme for file
+ * \return Parsed layer style
+ */
+layer_style parse_layer_style_json(Json::Value &node,
+                                   const color_theme &theme);
+
+/**
  * Parse Simple Style
  *
  * \param[in] node Layer element
@@ -134,7 +144,17 @@ layer_style parse_layer_style(tinyxml2::XMLElement *node,
  * \return Parsed layer style
  */
 simple_style parse_simple_style(tinyxml2::XMLElement *node,
-                              const color_theme &theme);
+                                const color_theme &theme);
+
+/**
+ * Parse Simple Style
+ *
+ * \param[in] node Layer element
+ * \param[in] theme Color theme for file
+ * \return Parsed layer style
+ */
+simple_style parse_simple_style_json(Json::Value &node,
+                                     const color_theme &theme);
 
 /**
  * Parse Simple Style with default
@@ -147,6 +167,18 @@ simple_style parse_simple_style(tinyxml2::XMLElement *node,
 simple_style parse_simple_style(tinyxml2::XMLElement *node,
                                 const color_theme &theme,
                                 const simple_style &defaults);
+
+/**
+ * Parse Simple Style with default
+ *
+ * \param[in] node Layer element
+ * \param[in] theme Color theme for file
+ * \param[in] defaults Default style
+ * \return Parsed layer style
+ */
+simple_style parse_simple_style_json(Json::Value &node,
+                                     const color_theme &theme,
+                                     const simple_style &defaults);
 
 /**
  * Load Style from File
