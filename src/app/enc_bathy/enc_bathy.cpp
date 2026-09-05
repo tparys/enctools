@@ -82,7 +82,6 @@ int main(int argc, char **argv)
     encdata::enc_dataset enc_;
     const fs::path share_path = config.get_user_share_dir();
     fs::path config_dir = config.get_user_config_dir();
-    fs::path config_file = config_dir / "config.xml";
     printf("Using config directory: %s ...\n", config_dir.string().c_str());
     printf("Using share directory: %s ...\n", share_path.c_str());
 

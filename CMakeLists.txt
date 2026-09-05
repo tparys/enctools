@@ -19,7 +19,6 @@ pkg_check_modules(CAIRO REQUIRED cairo)
 pkg_check_modules(GDAL REQUIRED gdal)
 pkg_check_modules(GTEST gtest_main gtest)
 pkg_check_modules(MICROHTTPD REQUIRED libmicrohttpd)
-pkg_check_modules(TINYXML2 REQUIRED tinyxml2)
 pkg_check_modules(JSONCPP REQUIRED jsoncpp)
 find_package(CGAL REQUIRED)
 
@@ -46,7 +45,6 @@ include_directories(
   ${CAIRO_INCLUDE_DIRS}
   ${GDAL_INCLUDE_DIRS}
   ${MICROHTTPD_INCLUDE_DIRS}
-  ${TINYXML2_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/include
   )

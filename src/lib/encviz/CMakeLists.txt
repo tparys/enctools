@@ -2,11 +2,9 @@ add_library(encviz
   enc_renderer.cpp
   style.cpp
   web_mercator.cpp
-  xml_config.cpp
   )
 target_link_libraries(encviz
   encdata
   ${CAIRO_LIBRARIES}
   ${MICROHTTPD_LIBRARIES}
-  ${TINYXML2_LIBRARIES}
   )

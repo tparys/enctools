@@ -14,7 +14,7 @@ System. Other environments may be added as time and interest permits.
 1. Install dependencies
 
 ```
-$ sudo apt install cmake libcairo2-dev libgdal-dev libgtest-dev libmicrohttpd-dev libtinyxml2-dev libcgal-dev libjsoncpp-dev
+$ sudo apt install cmake libcairo2-dev libgdal-dev libgtest-dev libmicrohttpd-dev libcgal-dev libjsoncpp-dev
 ```
 
 2. Compile the software
@@ -37,7 +37,7 @@ build $ cd ..
 enctools $ rm -rf ~/.enctools
 enctools $ mkdir ~/.enctools
 enctools $ cp share/enctools/config.json ~/.enctools
-enctools $ gedit ~/.enctools/config.xml
+enctools $ gedit ~/.enctools/config.json
 ```
 
 ```

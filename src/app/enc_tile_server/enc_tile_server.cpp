@@ -29,7 +29,7 @@ void usage(int exit_code)
            "\n"
            "Options:\n"
            "  -h         - Show help\n"
-           "  -c <path>  - Set config directory (default=~/.enctools/config.xml)\n"
+           "  -c <path>  - Set config directory (default=~/.enctools)\n"
            "  -p <port>  - Set server port (default=8888)\n"
            "  -s         - Single threaded operation\n");
     exit(exit_code);

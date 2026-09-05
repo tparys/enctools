@@ -488,17 +488,11 @@ void enc_renderer::load_config(encdata::config &config)
         for (const fs::directory_entry &entry : fs::directory_iterator(style_dir))
         {
             fs::path p = entry.path();
-            if (p.extension() == ".xml")
+            if (p.extension() == ".json")
             {
                 std::string style_name = p.stem().string() + "-" + theme_name;
-                printf("Loading (XML): %s\n", style_name.c_str());
+                printf("Loading: %s\n", style_name.c_str());
                 styles_[style_name] = load_style(p.string(), theme_data);
-            }
-            else if (p.extension() == ".json")
-            {
-                std::string style_name = p.stem().string() + "-" + theme_name;
-                printf("Loading (JSON): %s\n", style_name.c_str());
-                styles_[style_name] = load_style_json(p.string(), theme_data);
             }
         }
     }

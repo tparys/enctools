@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <json/reader.h>
 #include <encviz/style.h>
-#include <encviz/xml_config.h>
 
 #define GET8(x, y) (0xff & ((x) >> (y)))
 #define GET4(x, y) (0x11 * (0xf & ((x) >> (y))))
@@ -123,55 +122,15 @@ color load_color(const char *color, const color_theme &theme)
  * \param[in] theme Color theme for file
  * \return Parsed layer style
  */
-layer_style parse_layer_style(tinyxml2::XMLElement *node,
+layer_style parse_layer_style(Json::Value &node,
                               const color_theme &theme)
 {
-    // Sanity check
-    if (node == nullptr)
-    {
-        throw std::runtime_error("Layer style may not be null");
-    }
-
-    // Required XML style bits
-    layer_style parsed;
-    parsed.layer_name = xml_text(xml_query(node, "name"));
-    tinyxml2::XMLElement *child;
-    child = xml_query(node, "style");
-    parsed.style = parse_simple_style(child, theme);
-
-    // Optional attribute based cutoffs
-    child = xml_query(node, "cutoff_attr", true);
-    if (child)
-    {
-        parsed.cutoff_attr = xml_text(child);
-        for (auto style_node : xml_query_all(node, "cutoff"))
-        {
-            child = xml_query(style_node, "value");
-            parsed.cutoff_values.push_back(atof(xml_text(child)));
-            child = xml_query(style_node, "style");
-            parsed.cutoff_styles.push_back(parse_simple_style(child, theme, parsed.style));
-        }
-    }
-    
-    return parsed;
-}
-
-/**
- * Parse Layer Style
- *
- * \param[in] node Layer element
- * \param[in] theme Color theme for file
- * \return Parsed layer style
- */
-layer_style parse_layer_style_json(Json::Value &node,
-                                   const color_theme &theme)
-{
-    // Required XML style bits
+    // Required JSON style bits
     layer_style parsed;
     parsed.layer_name = node["name"].asString();
     if (node.isMember("style"))
     {
-        parsed.style = parse_simple_style_json(node["style"], theme);
+        parsed.style = parse_simple_style(node["style"], theme);
     }
     if (node.isMember("cutoff"))
     {
@@ -185,7 +144,7 @@ layer_style parse_layer_style_json(Json::Value &node,
         Json::Value styles = cutoff["styles"];
         for (Json::ArrayIndex i = 0; i < styles.size(); i++)
         {
-            parsed.cutoff_styles.push_back(parse_simple_style_json(styles[i], theme, parsed.style));
+            parsed.cutoff_styles.push_back(parse_simple_style(styles[i], theme, parsed.style));
         }
      }
     
@@ -199,7 +158,7 @@ layer_style parse_layer_style_json(Json::Value &node,
  * \param[in] theme Color theme for file
  * \return Parsed layer style
  */
-simple_style parse_simple_style(tinyxml2::XMLElement *node,
+simple_style parse_simple_style(Json::Value &node,
                                 const color_theme &theme)
 {
     simple_style defaults;
@@ -207,20 +166,6 @@ simple_style parse_simple_style(tinyxml2::XMLElement *node,
 }
 
 /**
- * Parse Simple Style
- *
- * \param[in] node Layer element
- * \param[in] theme Color theme for file
- * \return Parsed layer style
- */
-simple_style parse_simple_style_json(Json::Value &node,
-                                     const color_theme &theme)
-{
-    simple_style defaults;
-    return parse_simple_style_json(node, theme, defaults);
-}
-
-/**
  * Parse Simple Style with default
  *
  * \param[in] node Layer element
@@ -228,71 +173,9 @@ simple_style parse_simple_style_json(Json::Value &node,
  * \param[in] defaults Default style
  * \return Parsed layer style
  */
-simple_style parse_simple_style(tinyxml2::XMLElement *node,
+simple_style parse_simple_style(Json::Value &node,
                                 const color_theme &theme,
                                 const simple_style &defaults)
-{
-    // Sanity check
-    if (node == nullptr)
-    {
-        throw std::runtime_error("Layer style may not be null");
-    }
-
-    // Start from specified defaults
-    simple_style parsed = defaults;
-
-    // Load any specified elements
-    tinyxml2::XMLElement *child;
-    child = xml_query(node, "fill_color", true);
-    if (child)
-    {
-        parsed.fill_color = load_color(xml_text(child), theme);
-    }
-    child = xml_query(node, "line_color", true);
-    if (child)
-    {
-        parsed.line_color = load_color(xml_text(child), theme);
-    }
-    child = xml_query(node, "line_width", true);
-    if (child)
-    {
-        parsed.line_width = atoi(xml_text(child));
-    }
-    child = xml_query(node, "marker_size", true);
-    if (child)
-    {
-        parsed.marker_size = atoi(xml_text(child));
-    }
-    child = xml_query(node, "text_color", true);
-    if (child)
-    {
-        parsed.text_color = load_color(xml_text(child), theme);
-    }
-    child = xml_query(node, "text_font", true);
-    if (child)
-    {
-        parsed.text_font = xml_text(child);
-    }
-    child = xml_query(node, "text_size", true);
-    if (child)
-    {
-        parsed.text_size = atoi(xml_text(child));
-    }
-    
-    return parsed;
-}
-
-/**
- * Parse Simple Style with default
- *
- * \param[in] node Layer element
- * \param[in] theme Color theme for file
- * \param[in] defaults Default style
- * \return Parsed layer style
- */
-simple_style parse_simple_style_json(Json::Value &node,
-                                     const color_theme &theme,
-                                     const simple_style &defaults)
 {
     // Start from specified defaults
     simple_style parsed = defaults;
@@ -300,7 +183,6 @@ simple_style parse_simple_style_json(Json::Value &node,
     // Load any specified elements
     if (node.isMember("fill_color"))
     {
-        printf("   - fill_color: %s \n", node["fill_color"].asString().c_str());
         parsed.fill_color = load_color(node["fill_color"].asString().c_str(), theme);
     }
     if (node.isMember("line_color"))
@@ -339,38 +221,6 @@ simple_style parse_simple_style_json(Json::Value &node,
  */
 render_style load_style(const std::string &filename, const color_theme &theme)
 {
-    // Load XML document
-    tinyxml2::XMLDocument doc;
-    if (doc.LoadFile(filename.c_str()))
-    {
-        // Parse error?
-        throw std::runtime_error("Cannot parse " + filename);
-    }
-
-    // Load Style
-    tinyxml2::XMLElement *root = doc.RootElement();
-    render_style parsed;
-    try
-    {
-        parsed.background = load_color(xml_text(xml_query(root, "background")), theme);
-    }
-    catch (...) {}
-    for (tinyxml2::XMLElement *child : xml_query_all(root, "layer"))
-    {
-        parsed.layers.push_back(parse_layer_style(child, theme));
-    }
-    
-    return parsed;
-}
-
-/**
- * Load Style from File
- *
- * \param[in] filename Path to style file
- * \return Loaded style
- */
-render_style load_style_json(const std::string &filename, const color_theme &theme)
-{
     // Open input file
     std::ifstream handle(filename.c_str());
     if (!handle.good())
@@ -394,7 +244,6 @@ render_style load_style_json(const std::string &filename, const color_theme &the
     // Background color
     if (root.isMember("background"))
     {
-        printf(" - background\n");
         parsed.background = load_color(root["background"].asString().c_str(), theme);
     }
 
@@ -402,8 +251,7 @@ render_style load_style_json(const std::string &filename, const color_theme &the
     Json::Value layers = root["layers"];
     for (Json::ArrayIndex i = 0; i < layers.size(); i++)
     {
-        printf(" - layer %u\n", i);
-        parsed.layers.push_back(parse_layer_style_json(layers[i], theme));
+        parsed.layers.push_back(parse_layer_style(layers[i], theme));
     }
     
     return parsed;
