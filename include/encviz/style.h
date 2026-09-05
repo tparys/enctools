@@ -158,6 +158,15 @@ simple_style parse_simple_style(tinyxml2::XMLElement *node,
 render_style load_style(const std::string &filename, const color_theme &theme);
 
 /**
+ * Load Style from File
+ *
+ * \param[in] filename Path to style file
+ * \param[in] theme Color theme for file
+ * \return Loaded style
+ */
+render_style load_style_json(const std::string &filename, const color_theme &theme);
+
+/**
  * Load Color Themes from File
  *
  * \param[in] filename Path to style file

@@ -265,6 +265,37 @@ render_style load_style(const std::string &filename, const color_theme &theme)
 }
 
 /**
+ * Load Style from File
+ *
+ * \param[in] filename Path to style file
+ * \return Loaded style
+ */
+render_style load_style_json(const std::string &filename, const color_theme &theme)
+{
+    // Open input file
+    std::ifstream handle(filename.c_str());
+    if (!handle.good())
+    {
+        throw std::runtime_error("Cannot open theme file");
+    }
+
+    // Parse from input file
+    Json::Reader reader;
+    Json::Value root;
+    if (!reader.parse(handle, root))
+    {
+        std::string msg = "Cannot parse: " + filename + ": ";
+        msg += reader.getFormattedErrorMessages();
+        throw std::runtime_error(msg);
+    }
+
+    // Load Style
+    render_style parsed;
+    
+    return parsed;
+}
+
+/**
  * Load Color Themes from File
  *
  * \param[in] filename Path to style file

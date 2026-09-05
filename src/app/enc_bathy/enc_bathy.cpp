@@ -2,8 +2,7 @@
 #include <filesystem>
 #include <gdal_priv.h>
 #include <ogrsf_frmts.h>
-#include <encdata/os_paths.h>
-#include <encdata/config_reader.h>
+#include <encdata/config.h>
 #include <encdata/enc_dataset.h>
 #include <enctri/enc_triangulator.h>
 namespace fs = std::filesystem;
@@ -15,7 +14,7 @@ void usage(int exit_code)
            "\n"
            "Options:\n"
            "  -h           - Show help\n"
-           "  -c <path>  - Set config directory (default=~/.enctools/config.xml)\n"
+           "  -c <dir>     - Set config directory (default=~/.enctools)\n"
            "  -e <epsg_id> - Set output EPSG CRS\n");
     exit(exit_code);
 }
@@ -23,7 +22,7 @@ void usage(int exit_code)
 int main(int argc, char **argv)
 {
     int opt, epsg_id = -1;
-    const char *config = nullptr;
+    const char *config_req = nullptr;
 
     // Parse args
     while ((opt = getopt(argc, argv, "hc:e:")) != -1)
@@ -37,7 +36,7 @@ int main(int argc, char **argv)
 
             case 'c':
                 // Set config path
-                config = optarg;
+                config_req = optarg;
                 break;
 
             case 'e':
@@ -79,32 +78,30 @@ int main(int argc, char **argv)
     }
 
     // ENC Dataset
+    encdata::config config(argv[0], config_req);
     encdata::enc_dataset enc_;
-    const fs::path share_path = encdata::get_user_share_path(argv[0]);
-    fs::path config_path = encdata::get_user_config_path(config);
-    fs::path config_file = config_path / "config.xml";
-    printf("Using config directory: %s ...\n", config_path.string().c_str());
+    const fs::path share_path = config.get_user_share_dir();
+    fs::path config_dir = config.get_user_config_dir();
+    fs::path config_file = config_dir / "config.xml";
+    printf("Using config directory: %s ...\n", config_dir.string().c_str());
     printf("Using share directory: %s ...\n", share_path.c_str());
 
-    // Load config file
-    encdata::config_reader cfg((config_path / "config.json").string().c_str());
-
     // Read in config
-    fs::path chart_path = cfg.get<std::string>(".data.chart-dir");
-    fs::path meta_path = cfg.get<std::string>(".data.meta-dir", "meta");
+    fs::path chart_dir = config.get<std::string>(".data.chart-dir");
+    fs::path meta_dir = config.get<std::string>(".data.meta-dir", "meta");
 
     // Ensure some paths are absolute
-    if (chart_path.is_relative())
-        chart_path = config_path / chart_path;
-    if (meta_path.is_relative())
-        meta_path = config_path / meta_path;
+    if (chart_dir.is_relative())
+        chart_dir = config_dir / chart_dir;
+    if (meta_dir.is_relative())
+        meta_dir = config_dir / meta_dir;
 
-    printf(" - Charts: %s\n", chart_path.string().c_str());
-    printf(" - Metadata: %s\n", meta_path.string().c_str());
+    printf(" - Charts: %s\n", chart_dir.string().c_str());
+    printf(" - Metadata: %s\n", meta_dir.string().c_str());
 
     // Configure charts
-    enc_.set_cache_path(meta_path);
-    enc_.load_charts(chart_path);
+    enc_.set_cache_path(meta_dir);
+    enc_.load_charts(chart_dir);
 
     // Export named chart
     GDALDataset *chart_data = GetGDALDriverManager()->GetDriverByName(GDAL_MEM_DRIVER)->

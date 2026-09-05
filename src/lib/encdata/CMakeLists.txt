@@ -1,7 +1,6 @@
 add_library(encdata
   config.cpp
   enc_dataset.cpp
-  os_paths.cpp
   )
 target_link_libraries(encdata
   ${GDAL_LIBRARIES}

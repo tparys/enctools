@@ -110,7 +110,7 @@ MHD_Result request_handler(void *cls, struct MHD_Connection *connection,
 int main(int argc, char **argv)
 {
     int opt, port = 8888, mhd_mode = MHD_USE_THREAD_PER_CONNECTION;
-    const char *config_path = nullptr;
+    const char *config_req = nullptr;
 
     // Parse args
     while ((opt = getopt(argc, argv, "hc:p:s")) != -1)
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
 
             case 'c':
                 // Set config path
-                config_path = optarg;
+                config_req = optarg;
                 break;
 
             case 'p':
@@ -146,8 +146,11 @@ int main(int argc, char **argv)
     // Global GDAL Initialization
     GDALAllRegister();
 
+    // ENC configuration
+    encdata::config config(argv[0], config_req);
+
     // ENC renderer context
-    encviz::enc_renderer enc_rend(argv[0], config_path);
+    encviz::enc_renderer enc_rend(config);
 
     // Start MHD
     MHD_Daemon *daemon = MHD_start_daemon(MHD_USE_AUTO | mhd_mode,

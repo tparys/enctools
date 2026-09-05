@@ -8,6 +8,7 @@
  */
 
 #include <string>
+#include <filesystem>
 #include <optional>
 #include <json/value.h>
 
@@ -24,9 +25,19 @@ public:
      * Constructor
      *
      * \param[in] argv0 Application run path
-     * \param[in] path Specified path for config file
+     * \param[in] config_dir Specified directory with config file
      */
     config(char const *argv0, const char *path = nullptr);
+
+    /**
+     * Get Configuration Directory
+     */
+    const std::filesystem::path &get_user_config_dir();
+
+    /**
+     * Get Data Share Directory
+     */
+    const std::filesystem::path &get_user_share_dir();
 
     /**
      * Get Configuration as Type
@@ -70,7 +81,13 @@ public:
 
 private:
 
-    /// Parsed document
+    /// Config directory
+    std::filesystem::path config_dir_;
+
+    /// Data share directory
+    std::filesystem::path share_dir_;
+
+    /// Parsed config file
     Json::Value root_;
 };
 

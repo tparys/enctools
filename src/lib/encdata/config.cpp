@@ -8,7 +8,6 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
-#include <filesystem>
 #include <json/reader.h>
 #include <encdata/config.h>
 
@@ -18,27 +17,36 @@ namespace encdata
 /**
  * Constructor
  *
- * \param[in] path Specified path for config file
+ * \param[in] argv0 Application run path
+ * \param[in] path Specified directory with config file
  */
-config::config(const char *path)
+config::config(char const *argv0, const char *config_dir)
 {
-    // Use default path if one not specified
-    std::string final_path;
-    if (path == nullptr)
+    // Determine config directory location
+    if (config_dir == nullptr)
     {
-        std::filesystem::path default_path = getenv("HOME");
-        default_path.append(".enctools");
-        default_path.append("config.json");
-        final_path = default_path.string();
+        config_dir_ = getenv("HOME");
+        config_dir_.append(".enctools");
     }
     else
     {
-        final_path = path;
+        config_dir_ = config_dir;
     }
-    
-    // Open input file
-    printf("Using config file: %s\n", final_path.c_str());
-    std::ifstream handle(final_path.c_str());
+
+    // Determine data share location
+    //  - /usr/bin/app -> /usr/share/enctools
+    //  - /usr/local/bin/app -> /usr/local/share/enctools
+    //  - build/bin/app -> build/share/enctools
+    share_dir_ = argv0;
+    share_dir_ = share_dir_.parent_path().parent_path();
+    share_dir_ = share_dir_.append("share").append("enctools");
+
+    // Config file location
+    std::string config_file = (config_dir_ / "config.json").string();
+
+    // Open config file
+    printf("Using config file: %s\n", config_file.c_str());
+    std::ifstream handle(config_file.c_str());
     if (!handle.good())
     {
         throw std::runtime_error("Cannot open config file");
@@ -52,6 +60,22 @@ config::config(const char *path)
         msg += reader.getFormattedErrorMessages();
         throw std::runtime_error(msg);
     }
+}
+
+/**
+ * Get Configuration Directory
+ */
+const std::filesystem::path &config::get_user_config_dir()
+{
+    return config_dir_;
+}
+
+/**
+ * Get Data Share Directory
+ */
+const std::filesystem::path &config::get_user_share_dir()
+{
+    return share_dir_;
 }
 
 /**

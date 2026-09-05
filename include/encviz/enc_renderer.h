@@ -11,6 +11,7 @@
 #include <string>
 #include <filesystem>
 #include <cairo.h>
+#include <encdata/config.h>
 #include <encdata/enc_dataset.h>
 #include <encviz/style.h>
 #include <encviz/web_mercator.h>
@@ -25,10 +26,9 @@ public:
     /**
      * Constructor
      *
-     * \param[in] argv0 Application run path
-     * \param[in] config_path Path to configuration
+     * \param[in] config Config file instance
      */
-    enc_renderer(const char *argv0, const char *config_path = nullptr);
+    enc_renderer(encdata::config &config);
 
     /**
      * Render Chart Data
@@ -122,10 +122,9 @@ private:
     /**
      * Load Configuration
      *
-     * \param[in] argv0 Application run path
-     * \param[in] config_path Specified config path
+     * \param[in] config Config file instance
      */
-    void load_config(const char *argv0, const std::filesystem::path &config_path);
+    void load_config(encdata::config &config);
 
     /// Dimension of output image
     int tile_size_;

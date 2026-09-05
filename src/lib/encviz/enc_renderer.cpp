@@ -5,8 +5,7 @@
  * C++ abstraction class to handle visualization of ENC(S-57) chart data.
  */
 
-#include <encdata/os_paths.h>
-#include <encdata/config_reader.h>
+#include <encdata/config.h>
 #include <encviz/enc_renderer.h>
 namespace fs = std::filesystem;
 
@@ -37,13 +36,11 @@ static cairo_status_t cairo_write_to_vector(void *closure,
 /**
  * Constructor
  *
- * \param[in] argv0 Application run path
- * \param[in] tile_size Dimension of output image
- * \param[in] min_scale0 Min display scale at zoom=0
+ * \param[in] config Config file instance
  */
-enc_renderer::enc_renderer(const char *argv0, const char *config_path)
+enc_renderer::enc_renderer(encdata::config &config)
 {
-    load_config(argv0, encdata::get_user_config_path(config_path));
+    load_config(config);
 }
 
 /**
@@ -436,45 +433,42 @@ void enc_renderer::set_color(cairo_t *cr, const color &c)
 /**
  * Load Configuration
  *
- * \param[in] argv0 Application run path
- * \param[in] config_path Specified config path
+ * \param[in] config Config file instance
  */
-void enc_renderer::load_config(const char *argv0, const fs::path &config_path)
+void enc_renderer::load_config(encdata::config &config)
 {
-    const fs::path share_path = encdata::get_user_share_path(argv0);
+    fs::path config_dir = config.get_user_config_dir();
+    fs::path share_dir = config.get_user_share_dir();
     
-    printf("Using config directory: %s ...\n", config_path.string().c_str());
-    printf("Using share directory: %s ...\n", share_path.c_str());
-
-    // Load config file
-    encdata::config_reader cfg((config_path / "config.json").string().c_str());
+    printf("Using config dir: %s ...\n", config_dir.string().c_str());
+    printf("Using share dir: %s ...\n", share_dir.string().c_str());
 
     // Read in config
-    fs::path chart_path = cfg.get<std::string>(".data.chart-dir");
-    fs::path meta_path = cfg.get<std::string>(".data.meta-dir", "meta");
-    std::string land_path = cfg.get<std::string>(".data.land-file", "");
-    std::string land_layer = cfg.get<std::string>(".data.land-layer", "");
-    fs::path theme_file = share_path / "color-table.json";
-    fs::path style_path = share_path / "styles";
-    tile_size_ = cfg.get<int>(".tile.tile-size");
-    min_scale0_ = cfg.get<double>(".tile.scale-base");
+    fs::path chart_dir = config.get<std::string>(".data.chart-dir");
+    fs::path meta_dir = config.get<std::string>(".data.meta-dir", "meta");
+    std::string land_path = config.get<std::string>(".data.land-file", "");
+    std::string land_layer = config.get<std::string>(".data.land-layer", "");
+    fs::path theme_file = share_dir / "color-table.json";
+    fs::path style_dir = share_dir / "styles";
+    tile_size_ = config.get<int>(".tile.tile-size");
+    min_scale0_ = config.get<double>(".tile.scale-base");
 
     // Ensure some paths are absolute
-    if (chart_path.is_relative())
-        chart_path = config_path / chart_path;
-    if (meta_path.is_relative())
-        meta_path = config_path / meta_path;
+    if (chart_dir.is_relative())
+        chart_dir = config_dir / chart_dir;
+    if (meta_dir.is_relative())
+        meta_dir = config_dir / meta_dir;
 
-    printf(" - Charts: %s\n", chart_path.string().c_str());
-    printf(" - Metadata: %s\n", meta_path.string().c_str());
+    printf(" - Charts: %s\n", chart_dir.string().c_str());
+    printf(" - Metadata: %s\n", meta_dir.string().c_str());
     printf(" - Theme: %s\n", theme_file.string().c_str());
-    printf(" - Styles: %s\n", style_path.string().c_str());
+    printf(" - Styles: %s\n", style_dir.string().c_str());
     printf(" - Tile Size: %d\n", tile_size_);
     printf(" - Scale Base: %g\n", min_scale0_);
 
     // Configure charts
-    enc_.set_cache_path(meta_path);
-    enc_.load_charts(chart_path);
+    enc_.set_cache_path(meta_dir);
+    enc_.load_charts(chart_dir);
 
     // Configure default land layer
     if (!land_path.empty())
@@ -491,14 +485,20 @@ void enc_renderer::load_config(const char *argv0, const fs::path &config_path)
         const std::string &theme_name = it.first;
         const color_theme &theme_data = it.second;
 
-        for (const fs::directory_entry &entry : fs::directory_iterator(style_path))
+        for (const fs::directory_entry &entry : fs::directory_iterator(style_dir))
         {
             fs::path p = entry.path();
             if (p.extension() == ".xml")
             {
                 std::string style_name = p.stem().string() + "-" + theme_name;
                 styles_[style_name] = load_style(p.string(), theme_data);
-                printf("Loaded: %s\n", style_name.c_str());
+                printf("Loaded (XML): %s\n", style_name.c_str());
+            }
+            else if (p.extension() == ".json")
+            {
+                std::string style_name = p.stem().string() + "-" + theme_name;
+                styles_[style_name] = load_style_json(p.string(), theme_data);
+                printf("Loaded (JSON): %s\n", style_name.c_str());
             }
         }
     }

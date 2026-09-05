@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     int opt;
     encviz::tile_coords tc = encviz::tile_coords::WTMS;
     std::string out_file = "out.png";
-    const char *config_path = nullptr;
+    const char *config_req = nullptr;
     const char *style_name = "base-day";
 
     // Parse args
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
             case 'c':
                 // Set config path
-                config_path = optarg;
+                config_req = optarg;
                 break;
 
             case 'o':
@@ -90,7 +90,8 @@ int main(int argc, char **argv)
     GDALAllRegister();
 
     std::vector<uint8_t> png_bytes;
-    encviz::enc_renderer enc_rend(config_path);
+    encdata::config config(argv[0], config_req);
+    encviz::enc_renderer enc_rend(config);
     enc_rend.render(png_bytes, tc, x, y, z, style_name);
 
     // Dump to file
